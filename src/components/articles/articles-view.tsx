@@ -118,7 +118,12 @@ export function ArticlesView() {
       </Card>
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="w-[calc(100vw-2rem)] max-h-[calc(100vh-2rem)] overflow-y-auto">
-          <DialogHeader><DialogTitle>{editingArticle ? 'Modifier' : 'Nouveau'} Article</DialogTitle></DialogHeader>
+          <DialogHeader>
+            <div className="flex items-center justify-between">
+              <DialogTitle>{editingArticle ? 'Modifier' : 'Nouveau'} Article</DialogTitle>
+              <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-mono font-bold">ART01-DLG</span>
+            </div>
+          </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-3 gap-4">
               <div><Label>Code</Label><Input value={formData.code} onChange={(e) => setFormData({ ...formData, code: e.target.value })} required /></div>

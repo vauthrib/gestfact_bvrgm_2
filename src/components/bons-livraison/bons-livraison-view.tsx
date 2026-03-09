@@ -114,7 +114,12 @@ export function BonsLivraisonView() {
       </Card>
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="w-[calc(100vw-2rem)] max-h-[calc(100vh-2rem)] overflow-y-auto">
-          <DialogHeader><DialogTitle>{editing ? 'Modifier' : 'Nouveau'} BL</DialogTitle></DialogHeader>
+          <DialogHeader>
+            <div className="flex items-center justify-between">
+              <DialogTitle>{editing ? 'Modifier' : 'Nouveau'} BL</DialogTitle>
+              <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-mono font-bold">NBL01-DLG</span>
+            </div>
+          </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-3 gap-4">
               <div><Label>N°</Label><Input value={formData.numero} onChange={(e) => setFormData({ ...formData, numero: e.target.value })} required /></div>
