@@ -15,9 +15,10 @@ import { ExportDialog } from '@/components/import-export/export-dialog';
 
 interface Tiers {
   id: string; code: string; type: string; raisonSociale: string;
-  adresse: string | null; codePostal: string | null; ville: string | null;
+  adresse: string | null; adresse2: string | null; codePostal: string | null; ville: string | null; pays: string | null;
   telephone: string | null; email: string | null; ice: string | null;
-  rc: string | null; infoLibre: string | null; notes: string | null;
+  rc: string | null; rcLieu: string | null; cnss: string | null;
+  infoLibre: string | null; notes: string | null;
 }
 
 export function TiersView() {
@@ -29,8 +30,8 @@ export function TiersView() {
   const [exportOpen, setExportOpen] = useState(false);
   const [editingTiers, setEditingTiers] = useState<Tiers | null>(null);
   const [formData, setFormData] = useState({
-    code: '', type: 'CLIENT', raisonSociale: '', adresse: '', codePostal: '',
-    ville: '', telephone: '', email: '', ice: '', rc: '', infoLibre: '', notes: ''
+    code: '', type: 'CLIENT', raisonSociale: '', adresse: '', adresse2: '', codePostal: '',
+    ville: '', pays: '', telephone: '', email: '', ice: '', rc: '', rcLieu: '', cnss: '', infoLibre: '', notes: ''
   });
 
   useEffect(() => { fetchTiers(); }, []);
@@ -61,13 +62,19 @@ export function TiersView() {
   };
 
   const resetForm = () => {
-    setFormData({ code: '', type: 'CLIENT', raisonSociale: '', adresse: '', codePostal: '', ville: '', telephone: '', email: '', ice: '', rc: '', infoLibre: '', notes: '' });
+    setFormData({ code: '', type: 'CLIENT', raisonSociale: '', adresse: '', adresse2: '', codePostal: '', ville: '', pays: '', telephone: '', email: '', ice: '', rc: '', rcLieu: '', cnss: '', infoLibre: '', notes: '' });
     setEditingTiers(null);
   };
 
   const openEditDialog = (t: Tiers) => {
     setEditingTiers(t);
-    setFormData({ code: t.code, type: t.type, raisonSociale: t.raisonSociale, adresse: t.adresse || '', codePostal: t.codePostal || '', ville: t.ville || '', telephone: t.telephone || '', email: t.email || '', ice: t.ice || '', rc: t.rc || '', infoLibre: t.infoLibre || '', notes: t.notes || '' });
+    setFormData({
+      code: t.code, type: t.type, raisonSociale: t.raisonSociale,
+      adresse: t.adresse || '', adresse2: t.adresse2 || '', codePostal: t.codePostal || '',
+      ville: t.ville || '', pays: t.pays || '', telephone: t.telephone || '', email: t.email || '',
+      ice: t.ice || '', rc: t.rc || '', rcLieu: t.rcLieu || '', cnss: t.cnss || '',
+      infoLibre: t.infoLibre || '', notes: t.notes || ''
+    });
     setDialogOpen(true);
   };
 
@@ -121,22 +128,58 @@ export function TiersView() {
             </div>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-3 gap-4">
+            {/* Row 1: Code | Type */}
+            <div className="grid grid-cols-2 gap-4">
               <div><Label>Code</Label><Input value={formData.code} onChange={(e) => setFormData({ ...formData, code: e.target.value })} required /></div>
               <div><Label>Type</Label><Select value={formData.type} onValueChange={(v) => setFormData({ ...formData, type: v })}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="CLIENT">Client</SelectItem><SelectItem value="FOURNISSEUR">Fournisseur</SelectItem></SelectContent></Select></div>
-              <div><Label>Raison Sociale</Label><Input value={formData.raisonSociale} onChange={(e) => setFormData({ ...formData, raisonSociale: e.target.value })} required /></div>
             </div>
-            <div className="grid grid-cols-3 gap-4">
+
+            {/* Row 2: *Raison Sociale (3x large, 2x haut, 2x font) */}
+            <div className="col-span-full">
+              <Label className="text-base font-semibold">* Raison Sociale <span className="text-red-500">(obligatoire)</span></Label>
+              <Textarea
+                value={formData.raisonSociale}
+                onChange={(e) => setFormData({ ...formData, raisonSociale: e.target.value })}
+                required
+                className="text-2xl font-semibold min-h-[80px] resize-none"
+                placeholder="Raison sociale..."
+              />
+            </div>
+
+            {/* Row 3: Adresse */}
+            <div><Label>Adresse</Label><Input value={formData.adresse} onChange={(e) => setFormData({ ...formData, adresse: e.target.value })} /></div>
+
+            {/* Row 4: Adresse 2 */}
+            <div><Label>Adresse (suite)</Label><Input value={formData.adresse2} onChange={(e) => setFormData({ ...formData, adresse2: e.target.value })} /></div>
+
+            {/* Row 5: Ville | Pays */}
+            <div className="grid grid-cols-2 gap-4">
               <div><Label>Ville</Label><Input value={formData.ville} onChange={(e) => setFormData({ ...formData, ville: e.target.value })} /></div>
+              <div><Label>Pays</Label><Input value={formData.pays} onChange={(e) => setFormData({ ...formData, pays: e.target.value })} /></div>
+            </div>
+
+            {/* Row 6: Téléphone | Email */}
+            <div className="grid grid-cols-2 gap-4">
               <div><Label>Téléphone</Label><Input value={formData.telephone} onChange={(e) => setFormData({ ...formData, telephone: e.target.value })} /></div>
               <div><Label>Email</Label><Input type="email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} /></div>
             </div>
-            <div className="grid grid-cols-2 gap-4">
+
+            {/* Row 7: ICE | RC | Lieu RC */}
+            <div className="grid grid-cols-3 gap-4">
               <div><Label>ICE</Label><Input value={formData.ice} onChange={(e) => setFormData({ ...formData, ice: e.target.value })} /></div>
               <div><Label>RC</Label><Input value={formData.rc} onChange={(e) => setFormData({ ...formData, rc: e.target.value })} /></div>
+              <div><Label>Lieu RC</Label><Input value={formData.rcLieu} onChange={(e) => setFormData({ ...formData, rcLieu: e.target.value })} /></div>
             </div>
-            <div><Label>Info libre</Label><Textarea value={formData.infoLibre} onChange={(e) => setFormData({ ...formData, infoLibre: e.target.value })} /></div>
+
+            {/* Row 8: CNSS */}
+            <div><Label>CNSS</Label><Input value={formData.cnss} onChange={(e) => setFormData({ ...formData, cnss: e.target.value })} /></div>
+
+            {/* Row 9: Info Libres */}
+            <div><Label>Info libres</Label><Textarea value={formData.infoLibre} onChange={(e) => setFormData({ ...formData, infoLibre: e.target.value })} /></div>
+
+            {/* Row 10: Notes */}
             <div><Label>Notes</Label><Textarea value={formData.notes} onChange={(e) => setFormData({ ...formData, notes: e.target.value })} /></div>
+
             <DialogFooter><Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>Annuler</Button><Button type="submit" className="bg-blue-500 hover:bg-blue-600">{editingTiers ? 'Modifier' : 'Créer'}</Button></DialogFooter>
           </form>
         </DialogContent>
