@@ -9,7 +9,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Plus, Pencil, Trash2, Search, Download } from 'lucide-react';
+import { Plus, Pencil, Trash2, Search, Download, Upload } from 'lucide-react';
+import { ImportDialog } from '@/components/import-export/import-dialog';
+import { ExportDialog } from '@/components/import-export/export-dialog';
 
 interface ReglementClient {
   id: string; numero: string; factureId: string; dateReglement: string;
@@ -32,6 +34,8 @@ export function ReglementsClientsView() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
+  const [exportOpen, setExportOpen] = useState(false);
   const [editingReglement, setEditingReglement] = useState<ReglementClient | null>(null);
   const [formData, setFormData] = useState({
     factureId: '', dateReglement: new Date().toISOString().split('T')[0],
@@ -76,7 +80,6 @@ export function ReglementsClientsView() {
     setDialogOpen(true);
   };
 
-  const handleExport = () => window.open('/api/export?type=reglements-clients', '_blank');
   const filteredReglements = reglements.filter(r => r.facture?.client?.raisonSociale?.toLowerCase().includes(search.toLowerCase()) || r.numero?.toLowerCase().includes(search.toLowerCase()));
 
   if (loading) return <div className="p-8">Chargement...</div>;
@@ -87,7 +90,8 @@ export function ReglementsClientsView() {
         <div><h1 className="text-3xl font-bold text-blue-800">Règlements Clients</h1><p className="text-muted-foreground">Gérez les règlements reçus</p></div>
         <div className="flex items-center gap-2">
           <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-mono font-bold">MFC01</span>
-          <Button variant="outline" onClick={handleExport}><Download className="w-4 h-4 mr-2" />Export</Button>
+          <Button variant="outline" onClick={() => setImportOpen(true)}><Upload className="w-4 h-4 mr-2" />Import</Button>
+          <Button variant="outline" onClick={() => setExportOpen(true)}><Download className="w-4 h-4 mr-2" />Export</Button>
           <Button className="bg-blue-500 hover:bg-blue-600" onClick={() => { resetForm(); setDialogOpen(true); }}><Plus className="w-4 h-4 mr-2" />Nouveau</Button>
         </div>
       </div>
@@ -156,6 +160,8 @@ export function ReglementsClientsView() {
           </form>
         </DialogContent>
       </Dialog>
+      <ImportDialog open={importOpen} onOpenChange={setImportOpen} type="reglements-clients" code="MFC01" onSuccess={fetchReglements} />
+      <ExportDialog open={exportOpen} onOpenChange={setExportOpen} type="reglements-clients" code="MFC01" />
     </div>
   );
 }

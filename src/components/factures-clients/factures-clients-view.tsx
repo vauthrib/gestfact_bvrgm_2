@@ -8,8 +8,10 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Plus, Pencil, Trash2, Search, CheckCircle, Download } from 'lucide-react';
+import { Plus, Pencil, Trash2, Search, CheckCircle, Download, Upload } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { ImportDialog } from '@/components/import-export/import-dialog';
+import { ExportDialog } from '@/components/import-export/export-dialog';
 
 interface LigneFacture { id?: string; articleId?: string; designation: string; quantite: string; prixUnitaire: string; tauxTVA: string; totalHT: number; }
 interface FactureClient { id: string; numero: string; dateFacture: string; clientId: string; dateEcheance: string; statut: string; infoLibre: string | null; notes: string | null; totalHT: number; totalTVA: number; totalTTC: number; client: { raisonSociale: string }; lignes?: LigneFacture[]; }
@@ -26,6 +28,8 @@ export function FacturesClientsView() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
+  const [exportOpen, setExportOpen] = useState(false);
   const [editing, setEditing] = useState<FactureClient | null>(null);
   const [lignes, setLignes] = useState<LigneFacture[]>([{ designation: '', quantite: '1', prixUnitaire: '0', tauxTVA: '20', totalHT: 0 }]);
   const [formData, setFormData] = useState({ numero: '', dateFacture: new Date().toISOString().split('T')[0], clientId: '', dateEcheance: '', infoLibre: '', notes: '' });
@@ -91,7 +95,8 @@ export function FacturesClientsView() {
         <div><h1 className="text-3xl font-bold text-blue-800">Factures Clients</h1><p className="text-muted-foreground">Gérez vos factures</p></div>
         <div className="flex items-center gap-2">
           <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-mono font-bold">NFC01</span>
-          <Button variant="outline" onClick={() => window.open('/api/export?type=factures-clients', '_blank')}><Download className="w-4 h-4 mr-2" />Export</Button>
+          <Button variant="outline" onClick={() => setImportOpen(true)}><Upload className="w-4 h-4 mr-2" />Import</Button>
+          <Button variant="outline" onClick={() => setExportOpen(true)}><Download className="w-4 h-4 mr-2" />Export</Button>
           <Button className="bg-blue-500 hover:bg-blue-600" onClick={() => { resetForm(); generateNum(); setDialogOpen(true); }}><Plus className="w-4 h-4 mr-2" />Nouveau</Button>
         </div>
       </div>
@@ -163,6 +168,8 @@ export function FacturesClientsView() {
           </form>
         </DialogContent>
       </Dialog>
+      <ImportDialog open={importOpen} onOpenChange={setImportOpen} type="factures-clients" code="NFC01" onSuccess={fetchFactures} />
+      <ExportDialog open={exportOpen} onOpenChange={setExportOpen} type="factures-clients" code="NFC01" />
     </div>
   );
 }

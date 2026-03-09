@@ -9,7 +9,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Plus, Pencil, Trash2, Search, Users, Download } from 'lucide-react';
+import { Plus, Pencil, Trash2, Search, Users, Download, Upload } from 'lucide-react';
+import { ImportDialog } from '@/components/import-export/import-dialog';
+import { ExportDialog } from '@/components/import-export/export-dialog';
 
 interface Tiers {
   id: string; code: string; type: string; raisonSociale: string;
@@ -23,6 +25,8 @@ export function TiersView() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
+  const [exportOpen, setExportOpen] = useState(false);
   const [editingTiers, setEditingTiers] = useState<Tiers | null>(null);
   const [formData, setFormData] = useState({
     code: '', type: 'CLIENT', raisonSociale: '', adresse: '', codePostal: '',
@@ -68,7 +72,6 @@ export function TiersView() {
   };
 
   const generateCode = () => setFormData({ ...formData, code: `T${(tiers.length + 1).toString().padStart(4, '0')}` });
-  const handleExport = () => window.open('/api/export?type=tiers', '_blank');
   const filteredTiers = tiers.filter(t => t.raisonSociale?.toLowerCase().includes(search.toLowerCase()) || t.code?.toLowerCase().includes(search.toLowerCase()));
 
   if (loading) return <div className="p-8">Chargement...</div>;
@@ -79,7 +82,8 @@ export function TiersView() {
         <div><h1 className="text-3xl font-bold text-blue-800">Tiers</h1><p className="text-muted-foreground">Gérez vos clients et fournisseurs</p></div>
         <div className="flex items-center gap-2">
           <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-mono font-bold">TIE01</span>
-          <Button variant="outline" onClick={handleExport}><Download className="w-4 h-4 mr-2" />Export</Button>
+          <Button variant="outline" onClick={() => setImportOpen(true)}><Upload className="w-4 h-4 mr-2" />Import</Button>
+          <Button variant="outline" onClick={() => setExportOpen(true)}><Download className="w-4 h-4 mr-2" />Export</Button>
           <Button className="bg-blue-500 hover:bg-blue-600" onClick={() => { resetForm(); generateCode(); setDialogOpen(true); }}><Plus className="w-4 h-4 mr-2" />Nouveau</Button>
         </div>
       </div>
@@ -137,6 +141,8 @@ export function TiersView() {
           </form>
         </DialogContent>
       </Dialog>
+      <ImportDialog open={importOpen} onOpenChange={setImportOpen} type="tiers" code="TIE01" onSuccess={fetchTiers} />
+      <ExportDialog open={exportOpen} onOpenChange={setExportOpen} type="tiers" code="TIE01" />
     </div>
   );
 }

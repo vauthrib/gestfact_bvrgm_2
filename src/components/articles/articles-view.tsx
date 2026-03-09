@@ -8,7 +8,9 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Plus, Pencil, Trash2, Search, Package, Download } from 'lucide-react';
+import { Plus, Pencil, Trash2, Search, Package, Download, Upload } from 'lucide-react';
+import { ImportDialog } from '@/components/import-export/import-dialog';
+import { ExportDialog } from '@/components/import-export/export-dialog';
 
 interface Article {
   id: string; code: string; designation: string; prixUnitaire: number;
@@ -23,6 +25,8 @@ export function ArticlesView() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
+  const [exportOpen, setExportOpen] = useState(false);
   const [editingArticle, setEditingArticle] = useState<Article | null>(null);
   const [formData, setFormData] = useState({
     code: '', designation: '', prixUnitaire: '', unite: 'pièce', tauxTVA: '20', infoLibre: '', actif: true
@@ -73,7 +77,6 @@ export function ArticlesView() {
   };
 
   const generateCode = () => setFormData({ ...formData, code: `ART${(articles.length + 1).toString().padStart(4, '0')}` });
-  const handleExport = () => window.open('/api/export?type=articles', '_blank');
   const filteredArticles = articles.filter(a => a.designation?.toLowerCase().includes(search.toLowerCase()) || a.code?.toLowerCase().includes(search.toLowerCase()));
 
   if (loading) return <div className="p-8">Chargement...</div>;
@@ -84,7 +87,8 @@ export function ArticlesView() {
         <div><h1 className="text-3xl font-bold text-blue-800">Articles</h1><p className="text-muted-foreground">Gérez votre catalogue</p></div>
         <div className="flex items-center gap-2">
           <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-mono font-bold">ART01</span>
-          <Button variant="outline" onClick={handleExport}><Download className="w-4 h-4 mr-2" />Export</Button>
+          <Button variant="outline" onClick={() => setImportOpen(true)}><Upload className="w-4 h-4 mr-2" />Import</Button>
+          <Button variant="outline" onClick={() => setExportOpen(true)}><Download className="w-4 h-4 mr-2" />Export</Button>
           <Button className="bg-blue-500 hover:bg-blue-600" onClick={() => { resetForm(); generateCode(); setDialogOpen(true); }}><Plus className="w-4 h-4 mr-2" />Nouveau</Button>
         </div>
       </div>
@@ -140,6 +144,8 @@ export function ArticlesView() {
           </form>
         </DialogContent>
       </Dialog>
+      <ImportDialog open={importOpen} onOpenChange={setImportOpen} type="articles" code="ART01" onSuccess={fetchArticles} />
+      <ExportDialog open={exportOpen} onOpenChange={setExportOpen} type="articles" code="ART01" />
     </div>
   );
 }

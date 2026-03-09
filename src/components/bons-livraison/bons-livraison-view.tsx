@@ -8,8 +8,10 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Plus, Pencil, Trash2, Search, CheckCircle, Download } from 'lucide-react';
+import { Plus, Pencil, Trash2, Search, CheckCircle, Download, Upload } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { ImportDialog } from '@/components/import-export/import-dialog';
+import { ExportDialog } from '@/components/import-export/export-dialog';
 
 interface LigneBL { id?: string; articleId?: string; designation: string; quantite: string; prixUnitaire: string; totalHT: number; }
 interface BonLivraison { id: string; numero: string; dateBL: string; clientId: string; statut: string; infoLibre: string | null; notesLivraison: string | null; totalHT: number; client: { raisonSociale: string }; lignes?: LigneBL[]; }
@@ -26,6 +28,8 @@ export function BonsLivraisonView() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
+  const [exportOpen, setExportOpen] = useState(false);
   const [editing, setEditing] = useState<BonLivraison | null>(null);
   const [lignes, setLignes] = useState<LigneBL[]>([{ designation: '', quantite: '1', prixUnitaire: '0', totalHT: 0 }]);
   const [formData, setFormData] = useState({ numero: '', dateBL: new Date().toISOString().split('T')[0], clientId: '', infoLibre: '', notesLivraison: '' });
@@ -85,7 +89,8 @@ export function BonsLivraisonView() {
         <div><h1 className="text-3xl font-bold text-blue-800">Bons de Livraison</h1><p className="text-muted-foreground">Gérez vos BL</p></div>
         <div className="flex items-center gap-2">
           <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-mono font-bold">NBL01</span>
-          <Button variant="outline" onClick={() => window.open('/api/export?type=bons-livraison', '_blank')}><Download className="w-4 h-4 mr-2" />Export</Button>
+          <Button variant="outline" onClick={() => setImportOpen(true)}><Upload className="w-4 h-4 mr-2" />Import</Button>
+          <Button variant="outline" onClick={() => setExportOpen(true)}><Download className="w-4 h-4 mr-2" />Export</Button>
           <Button className="bg-blue-500 hover:bg-blue-600" onClick={() => { resetForm(); generateNum(); setDialogOpen(true); }}><Plus className="w-4 h-4 mr-2" />Nouveau</Button>
         </div>
       </div>
@@ -149,6 +154,8 @@ export function BonsLivraisonView() {
           </form>
         </DialogContent>
       </Dialog>
+      <ImportDialog open={importOpen} onOpenChange={setImportOpen} type="bons-livraison" code="NBL01" onSuccess={fetchBons} />
+      <ExportDialog open={exportOpen} onOpenChange={setExportOpen} type="bons-livraison" code="NBL01" />
     </div>
   );
 }
