@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Plus, Pencil, Trash2, Search, CheckCircle, Download } from 'lucide-react';
+import { Plus, Pencil, Trash2, Search, CheckCircle, Download, ArrowUp, ArrowDown, ArrowUpDown } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ExportDialog } from '@/components/import-export/export-dialog';
 
@@ -24,6 +24,9 @@ interface Tiers { id: string; code: string; raisonSociale: string; type: string;
 const parseNumber = (v: string) => { if (!v) return 0; return parseFloat(v.replace(',', '.').replace(/\s/g, '')) || 0; };
 const formatCurrency = (a: number) => `${a.toLocaleString('fr-MA', { minimumFractionDigits: 2 })} DH`;
 
+type SortField = 'numeroFacture' | 'dateFacture' | 'fournisseur' | 'montantHT' | 'montantTVA' | 'montantTTC' | 'statut';
+type SortDirection = 'asc' | 'desc';
+
 export function FacturesFournisseursView() {
   const [factures, setFactures] = useState<FactureFournisseur[]>([]);
   const [fournisseurs, setFournisseurs] = useState<Tiers[]>([]);
@@ -36,15 +39,15 @@ export function FacturesFournisseursView() {
     numeroFacture: '', fournisseurId: '', dateFacture: new Date().toISOString().split('T')[0],
     dateEcheance: '', montantHT: '', montantTVA: '', infoLibre: '', notes: ''
   });
+  
+  // Sorting and filtering
+  const [sortField, setSortField] = useState<SortField>('dateFacture');
+  const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
 
   useEffect(() => { fetchFactures(); fetchFournisseurs(); }, []);
-  
-  // Recharger les données à l'ouverture du dialogue
-  useEffect(() => {
-    if (dialogOpen) {
-      fetchFournisseurs();
-    }
-  }, [dialogOpen]);
+  useEffect(() => { if (dialogOpen) fetchFournisseurs(); }, [dialogOpen]);
   
   const fetchFactures = async () => { try { const res = await fetch('/api/factures-fournisseurs'); const d = await res.json(); setFactures(Array.isArray(d) ? d : []); } catch (e) { console.error(e); } finally { setLoading(false); } };
   const fetchFournisseurs = async () => { try { const res = await fetch('/api/tiers'); const d = await res.json(); setFournisseurs((Array.isArray(d) ? d : []).filter((t: any) => t.type === 'FOURNISSEUR')); } catch (e) { } };
@@ -84,7 +87,45 @@ export function FacturesFournisseursView() {
     setDialogOpen(true);
   };
 
-  const filtered = factures.filter(f => f.numeroFacture?.toLowerCase().includes(search.toLowerCase()) || f.fournisseur?.raisonSociale?.toLowerCase().includes(search.toLowerCase()));
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDirection('desc');
+    }
+  };
+
+  const SortIcon = ({ field }: { field: SortField }) => {
+    if (sortField !== field) return <ArrowUpDown className="w-4 h-4 ml-1 inline opacity-50" />;
+    return sortDirection === 'asc' ? <ArrowUp className="w-4 h-4 ml-1 inline" /> : <ArrowDown className="w-4 h-4 ml-1 inline" />;
+  };
+
+  const filtered = factures
+    .filter(f => {
+      const matchSearch = f.numeroFacture?.toLowerCase().includes(search.toLowerCase()) || f.fournisseur?.raisonSociale?.toLowerCase().includes(search.toLowerCase());
+      const factureDate = new Date(f.dateFacture);
+      const matchDateFrom = !dateFrom || factureDate >= new Date(dateFrom);
+      const matchDateTo = !dateTo || factureDate <= new Date(dateTo + 'T23:59:59');
+      return matchSearch && matchDateFrom && matchDateTo;
+    })
+    .sort((a, b) => {
+      let valA: any, valB: any;
+      switch (sortField) {
+        case 'numeroFacture': valA = a.numeroFacture; valB = b.numeroFacture; break;
+        case 'dateFacture': valA = new Date(a.dateFacture).getTime(); valB = new Date(b.dateFacture).getTime(); break;
+        case 'fournisseur': valA = a.fournisseur?.raisonSociale || ''; valB = b.fournisseur?.raisonSociale || ''; break;
+        case 'montantHT': valA = a.montantHT; valB = b.montantHT; break;
+        case 'montantTVA': valA = a.montantTVA; valB = b.montantTVA; break;
+        case 'montantTTC': valA = a.montantTTC; valB = b.montantTTC; break;
+        case 'statut': valA = a.statut; valB = b.statut; break;
+        default: return 0;
+      }
+      if (typeof valA === 'string') {
+        return sortDirection === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
+      }
+      return sortDirection === 'asc' ? valA - valB : valB - valA;
+    });
 
   if (loading) return <div className="p-8">Chargement...</div>;
 
@@ -101,10 +142,37 @@ export function FacturesFournisseursView() {
       <Card>
         <CardHeader><CardTitle>Liste</CardTitle></CardHeader>
         <CardContent>
-          <div className="mb-4"><div className="relative"><Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" /><Input placeholder="Rechercher..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-10" /></div></div>
+          <div className="mb-4 flex flex-wrap gap-4 items-center">
+            <div className="relative flex-1 min-w-[200px]">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Input placeholder="Rechercher..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-10" />
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground">Du:</span>
+              <Input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} className="w-40" />
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground">Au:</span>
+              <Input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} className="w-40" />
+            </div>
+            {(dateFrom || dateTo) && (
+              <Button variant="ghost" size="sm" onClick={() => { setDateFrom(''); setDateTo(''); }}>Effacer</Button>
+            )}
+          </div>
           {filtered.length === 0 ? <div className="text-center text-muted-foreground py-8">Aucune facture</div> : (
             <Table>
-              <TableHeader><TableRow><TableHead>N° Facture</TableHead><TableHead>Date</TableHead><TableHead>Fournisseur</TableHead><TableHead>HT</TableHead><TableHead>TVA</TableHead><TableHead>TTC</TableHead><TableHead>Statut</TableHead><TableHead>Actions</TableHead></TableRow></TableHeader>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="cursor-pointer hover:bg-gray-100" onClick={() => handleSort('numeroFacture')}>N° Facture <SortIcon field="numeroFacture" /></TableHead>
+                  <TableHead className="cursor-pointer hover:bg-gray-100" onClick={() => handleSort('dateFacture')}>Date <SortIcon field="dateFacture" /></TableHead>
+                  <TableHead className="cursor-pointer hover:bg-gray-100" onClick={() => handleSort('fournisseur')}>Fournisseur <SortIcon field="fournisseur" /></TableHead>
+                  <TableHead className="cursor-pointer hover:bg-gray-100" onClick={() => handleSort('montantHT')}>HT <SortIcon field="montantHT" /></TableHead>
+                  <TableHead className="cursor-pointer hover:bg-gray-100" onClick={() => handleSort('montantTVA')}>TVA <SortIcon field="montantTVA" /></TableHead>
+                  <TableHead className="cursor-pointer hover:bg-gray-100" onClick={() => handleSort('montantTTC')}>TTC <SortIcon field="montantTTC" /></TableHead>
+                  <TableHead className="cursor-pointer hover:bg-gray-100" onClick={() => handleSort('statut')}>Statut <SortIcon field="statut" /></TableHead>
+                  <TableHead>Actions</TableHead>
+                </TableRow>
+              </TableHeader>
               <TableBody>{filtered.map((f) => (<TableRow key={f.id}>
                 <TableCell className="font-medium">{f.numeroFacture}</TableCell>
                 <TableCell>{new Date(f.dateFacture).toLocaleDateString('fr-FR')}</TableCell>

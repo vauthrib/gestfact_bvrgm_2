@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Plus, Pencil, Trash2, Search, Download, AlertTriangle, CheckCircle } from 'lucide-react';
+import { Plus, Pencil, Trash2, Search, Download, AlertTriangle, CheckCircle, ArrowUp, ArrowDown, ArrowUpDown } from 'lucide-react';
 import { ExportDialog } from '@/components/import-export/export-dialog';
 
 interface ReglementClient {
@@ -27,6 +27,9 @@ interface FactureClient {
 const parseNumber = (v: string) => { if (!v) return 0; return parseFloat(v.replace(',', '.').replace(/\s/g, '')) || 0; };
 const formatCurrency = (a: number) => `${a.toLocaleString('fr-MA', { minimumFractionDigits: 2 })} DH`;
 
+type SortField = 'numero' | 'dateReglement' | 'client' | 'facture' | 'montant' | 'modePaiement' | 'statut';
+type SortDirection = 'asc' | 'desc';
+
 export function ReglementsClientsView() {
   const [reglements, setReglements] = useState<ReglementClient[]>([]);
   const [factures, setFactures] = useState<FactureClient[]>([]);
@@ -41,12 +44,17 @@ export function ReglementsClientsView() {
     factureId: '', dateReglement: new Date().toISOString().split('T')[0],
     montant: '', modePaiement: 'VIREMENT', reference: '', infoLibre: '', notes: ''
   });
+  
+  // Sorting and filtering
+  const [sortField, setSortField] = useState<SortField>('dateReglement');
+  const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
 
   useEffect(() => { fetchReglements(); fetchFactures(); }, []);
   const fetchReglements = async () => { try { const res = await fetch('/api/reglements-clients'); const data = await res.json(); setReglements(Array.isArray(data) ? data : []); } catch (e) { console.error(e); } finally { setLoading(false); } };
   const fetchFactures = async () => { try { const res = await fetch('/api/factures-clients'); const data = await res.json(); setFactures(Array.isArray(data) ? data : []); } catch (e) { console.error(e); } };
 
-  // Calculer le reste à payer pour une facture (basé sur les règlements VALIDÉS uniquement)
   const calculerResteAPayer = (factureId: string) => {
     const facture = factures.find(f => f.id === factureId);
     if (!facture) return 0;
@@ -56,7 +64,6 @@ export function ReglementsClientsView() {
     return facture.totalTTC - totalReglementsValides;
   };
 
-  // Vérifier si une facture est soldée (basé sur les règlements VALIDÉS uniquement)
   const isFactureSoldee = (factureId: string) => {
     const facture = factures.find(f => f.id === factureId);
     if (!facture) return false;
@@ -66,12 +73,8 @@ export function ReglementsClientsView() {
     return totalReglementsValides >= facture.totalTTC;
   };
 
-  // Filtrer les factures validées qui ne sont pas soldées
-  const facturesDisponibles = factures.filter(f => 
-    f.statut === 'VALIDEE' && !isFactureSoldee(f.id)
-  );
+  const facturesDisponibles = factures.filter(f => f.statut === 'VALIDEE' && !isFactureSoldee(f.id));
 
-  // Quand on sélectionne une facture
   const handleFactureChange = (factureId: string) => {
     const facture = factures.find(f => f.id === factureId);
     setSelectedFacture(facture || null);
@@ -86,17 +89,14 @@ export function ReglementsClientsView() {
     const montant = parseNumber(formData.montant);
     if (montant <= 0) { alert('Montant invalide'); return; }
     
-    // Vérifier le dépassement (basé sur les règlements validés)
     const reste = calculerResteAPayer(formData.factureId);
     const depassement = montant - reste;
-    const TOLERANCE_DEPASSEMENT = 10; // Tolérance de 10 DH
+    const TOLERANCE_DEPASSEMENT = 10;
     
     if (depassement > TOLERANCE_DEPASSEMENT) {
-      const confirmMsg = `Attention: Le règlement de ${formatCurrency(montant)} dépasse le reste à payer de ${formatCurrency(reste)}.\n\nDépassement: ${formatCurrency(depassement)}\n\nVoulez-vous vraiment continuer?`;
-      if (!confirm(confirmMsg)) return;
+      if (!confirm(`Attention: Le règlement de ${formatCurrency(montant)} dépasse le reste à payer de ${formatCurrency(reste)}.\n\nDépassement: ${formatCurrency(depassement)}\n\nVoulez-vous vraiment continuer?`)) return;
     } else if (depassement > 0 && depassement <= TOLERANCE_DEPASSEMENT) {
-      const confirmMsg = `Petit dépassement détecté: ${formatCurrency(depassement)}.\n\nConfirmer ce règlement?`;
-      if (!confirm(confirmMsg)) return;
+      if (!confirm(`Petit dépassement détecté: ${formatCurrency(depassement)}.\n\nConfirmer ce règlement?`)) return;
     }
     
     try {
@@ -136,10 +136,7 @@ export function ReglementsClientsView() {
   };
 
   const openEditDialog = (r: ReglementClient) => {
-    if (r.statut === 'VALIDE') {
-      alert('Ce règlement est validé et ne peut plus être modifié.');
-      return;
-    }
+    if (r.statut === 'VALIDE') { alert('Ce règlement est validé et ne peut plus être modifié.'); return; }
     setEditingReglement(r);
     const facture = factures.find(f => f.id === r.factureId);
     setSelectedFacture(facture || null);
@@ -153,7 +150,45 @@ export function ReglementsClientsView() {
     setDialogOpen(true);
   };
 
-  const filteredReglements = reglements.filter(r => r.facture?.client?.raisonSociale?.toLowerCase().includes(search.toLowerCase()) || r.numero?.toLowerCase().includes(search.toLowerCase()));
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDirection('desc');
+    }
+  };
+
+  const SortIcon = ({ field }: { field: SortField }) => {
+    if (sortField !== field) return <ArrowUpDown className="w-4 h-4 ml-1 inline opacity-50" />;
+    return sortDirection === 'asc' ? <ArrowUp className="w-4 h-4 ml-1 inline" /> : <ArrowDown className="w-4 h-4 ml-1 inline" />;
+  };
+
+  const filteredReglements = reglements
+    .filter(r => {
+      const matchSearch = r.facture?.client?.raisonSociale?.toLowerCase().includes(search.toLowerCase()) || r.numero?.toLowerCase().includes(search.toLowerCase());
+      const regDate = new Date(r.dateReglement);
+      const matchDateFrom = !dateFrom || regDate >= new Date(dateFrom);
+      const matchDateTo = !dateTo || regDate <= new Date(dateTo + 'T23:59:59');
+      return matchSearch && matchDateFrom && matchDateTo;
+    })
+    .sort((a, b) => {
+      let valA: any, valB: any;
+      switch (sortField) {
+        case 'numero': valA = a.numero; valB = b.numero; break;
+        case 'dateReglement': valA = new Date(a.dateReglement).getTime(); valB = new Date(b.dateReglement).getTime(); break;
+        case 'client': valA = a.facture?.client?.raisonSociale || ''; valB = b.facture?.client?.raisonSociale || ''; break;
+        case 'facture': valA = a.facture?.numero || ''; valB = b.facture?.numero || ''; break;
+        case 'montant': valA = a.montant; valB = b.montant; break;
+        case 'modePaiement': valA = a.modePaiement; valB = b.modePaiement; break;
+        case 'statut': valA = a.statut; valB = b.statut; break;
+        default: return 0;
+      }
+      if (typeof valA === 'string') {
+        return sortDirection === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
+      }
+      return sortDirection === 'asc' ? valA - valB : valB - valA;
+    });
 
   if (loading) return <div className="p-8">Chargement...</div>;
 
@@ -170,10 +205,37 @@ export function ReglementsClientsView() {
       <Card>
         <CardHeader><CardTitle>Liste des Règlements</CardTitle></CardHeader>
         <CardContent>
-          <div className="mb-4"><div className="relative"><Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" /><Input placeholder="Rechercher..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-10" /></div></div>
+          <div className="mb-4 flex flex-wrap gap-4 items-center">
+            <div className="relative flex-1 min-w-[200px]">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Input placeholder="Rechercher..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-10" />
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground">Du:</span>
+              <Input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} className="w-40" />
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground">Au:</span>
+              <Input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} className="w-40" />
+            </div>
+            {(dateFrom || dateTo) && (
+              <Button variant="ghost" size="sm" onClick={() => { setDateFrom(''); setDateTo(''); }}>Effacer</Button>
+            )}
+          </div>
           {filteredReglements.length === 0 ? <div className="text-center text-muted-foreground py-8">Aucun règlement</div> : (
             <Table>
-              <TableHeader><TableRow><TableHead>N°</TableHead><TableHead>Date</TableHead><TableHead>Client</TableHead><TableHead>Facture</TableHead><TableHead>Montant</TableHead><TableHead>Mode</TableHead><TableHead>Statut</TableHead><TableHead>Actions</TableHead></TableRow></TableHeader>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="cursor-pointer hover:bg-gray-100" onClick={() => handleSort('numero')}>N° <SortIcon field="numero" /></TableHead>
+                  <TableHead className="cursor-pointer hover:bg-gray-100" onClick={() => handleSort('dateReglement')}>Date <SortIcon field="dateReglement" /></TableHead>
+                  <TableHead className="cursor-pointer hover:bg-gray-100" onClick={() => handleSort('client')}>Client <SortIcon field="client" /></TableHead>
+                  <TableHead className="cursor-pointer hover:bg-gray-100" onClick={() => handleSort('facture')}>Facture <SortIcon field="facture" /></TableHead>
+                  <TableHead className="cursor-pointer hover:bg-gray-100" onClick={() => handleSort('montant')}>Montant <SortIcon field="montant" /></TableHead>
+                  <TableHead className="cursor-pointer hover:bg-gray-100" onClick={() => handleSort('modePaiement')}>Mode <SortIcon field="modePaiement" /></TableHead>
+                  <TableHead className="cursor-pointer hover:bg-gray-100" onClick={() => handleSort('statut')}>Statut <SortIcon field="statut" /></TableHead>
+                  <TableHead>Actions</TableHead>
+                </TableRow>
+              </TableHeader>
               <TableBody>{filteredReglements.map((r) => (<TableRow key={r.id}>
                 <TableCell className="font-medium">{r.numero}</TableCell>
                 <TableCell>{new Date(r.dateReglement).toLocaleDateString('fr-FR')}</TableCell>
@@ -181,15 +243,9 @@ export function ReglementsClientsView() {
                 <TableCell>{r.facture?.numero}</TableCell>
                 <TableCell>{formatCurrency(r.montant)}</TableCell>
                 <TableCell>{r.modePaiement}</TableCell>
-                <TableCell>
-                  <span className={`px-2 py-1 rounded text-xs ${r.statut === 'VALIDE' ? 'bg-pink-100 text-pink-800' : 'bg-yellow-100 text-yellow-800'}`}>
-                    {r.statut === 'VALIDE' ? 'Validé' : 'En attente'}
-                  </span>
-                </TableCell>
+                <TableCell><span className={`px-2 py-1 rounded text-xs ${r.statut === 'VALIDE' ? 'bg-pink-100 text-pink-800' : 'bg-yellow-100 text-yellow-800'}`}>{r.statut === 'VALIDE' ? 'Validé' : 'En attente'}</span></TableCell>
                 <TableCell><div className="flex gap-2">
-                  {r.statut === 'ENREGISTRE' && (
-                    <Button size="sm" variant="outline" className="text-pink-600" onClick={() => handleValidate(r.id)} title="Valider"><CheckCircle className="h-4 w-4" /></Button>
-                  )}
+                  {r.statut === 'ENREGISTRE' && <Button size="sm" variant="outline" className="text-pink-600" onClick={() => handleValidate(r.id)} title="Valider"><CheckCircle className="h-4 w-4" /></Button>}
                   <Button size="sm" variant="outline" onClick={() => openEditDialog(r)} disabled={r.statut === 'VALIDE'} title="Modifier"><Pencil className="h-4 w-4" /></Button>
                   <Button size="sm" variant="destructive" onClick={() => handleDelete(r.id)} disabled={r.statut === 'VALIDE'} title="Supprimer"><Trash2 className="h-4 w-4" /></Button>
                 </div></TableCell>
@@ -222,42 +278,22 @@ export function ReglementsClientsView() {
                 </SelectContent>
               </Select>
             </div>
-            
             {selectedFacture && resteAPayer !== null && (
               <div className={`p-4 rounded-lg border ${resteAPayer > 0 ? 'bg-yellow-50 border-yellow-200' : 'bg-pink-50 border-pink-200'}`}>
                 <div className="grid grid-cols-3 gap-4 text-sm">
-                  <div>
-                    <span className="text-muted-foreground">Total Facture:</span>
-                    <div className="font-bold text-lg">{formatCurrency(selectedFacture.totalTTC)}</div>
-                  </div>
-                  <div>
-                    <span className="text-muted-foreground">Déjà réglé (validé):</span>
-                    <div className="font-bold text-lg">{formatCurrency(selectedFacture.totalTTC - resteAPayer)}</div>
-                  </div>
-                  <div>
-                    <span className="text-muted-foreground">Reste à payer:</span>
-                    <div className={`font-bold text-lg ${resteAPayer > 0 ? 'text-pink-600' : 'text-pink-600'}`}>
-                      {formatCurrency(resteAPayer)}
-                      {resteAPayer <= 0 && <span className="ml-2 text-sm">(Soldée)</span>}
-                    </div>
-                  </div>
+                  <div><span className="text-muted-foreground">Total Facture:</span><div className="font-bold text-lg">{formatCurrency(selectedFacture.totalTTC)}</div></div>
+                  <div><span className="text-muted-foreground">Déjà réglé (validé):</span><div className="font-bold text-lg">{formatCurrency(selectedFacture.totalTTC - resteAPayer)}</div></div>
+                  <div><span className="text-muted-foreground">Reste à payer:</span><div className="font-bold text-lg text-pink-600">{formatCurrency(resteAPayer)}{resteAPayer <= 0 && <span className="ml-2 text-sm">(Soldée)</span>}</div></div>
                 </div>
               </div>
             )}
-            
             <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label className="text-base font-semibold">Date</Label>
-                <Input type="date" value={formData.dateReglement} onChange={(e) => setFormData({ ...formData, dateReglement: e.target.value })} required />
-              </div>
+              <div><Label className="text-base font-semibold">Date</Label><Input type="date" value={formData.dateReglement} onChange={(e) => setFormData({ ...formData, dateReglement: e.target.value })} required /></div>
               <div>
                 <Label className="text-base font-semibold">Montant</Label>
                 <Input type="text" value={formData.montant} onChange={(e) => setFormData({ ...formData, montant: e.target.value })} required />
                 {resteAPayer !== null && parseNumber(formData.montant) > resteAPayer && (
-                  <div className="flex items-center gap-2 mt-1 text-pink-600 text-sm">
-                    <AlertTriangle className="w-4 h-4" />
-                    Dépassement de {formatCurrency(parseNumber(formData.montant) - resteAPayer)}
-                  </div>
+                  <div className="flex items-center gap-2 mt-1 text-pink-600 text-sm"><AlertTriangle className="w-4 h-4" />Dépassement de {formatCurrency(parseNumber(formData.montant) - resteAPayer)}</div>
                 )}
               </div>
             </div>
@@ -273,14 +309,8 @@ export function ReglementsClientsView() {
                 </SelectContent>
               </Select>
             </div>
-            <div>
-              <Label className="text-base font-semibold">Référence</Label>
-              <Input value={formData.reference} onChange={(e) => setFormData({ ...formData, reference: e.target.value })} placeholder="N° chèque, virement..." />
-            </div>
-            <div>
-              <Label className="text-base font-semibold">Info libre</Label>
-              <Textarea value={formData.infoLibre} onChange={(e) => setFormData({ ...formData, infoLibre: e.target.value })} placeholder="Informations complémentaires..." />
-            </div>
+            <div><Label className="text-base font-semibold">Référence</Label><Input value={formData.reference} onChange={(e) => setFormData({ ...formData, reference: e.target.value })} placeholder="N° chèque, virement..." /></div>
+            <div><Label className="text-base font-semibold">Info libre</Label><Textarea value={formData.infoLibre} onChange={(e) => setFormData({ ...formData, infoLibre: e.target.value })} placeholder="Informations complémentaires..." /></div>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>Annuler</Button>
               <Button type="submit" className="bg-pink-600 hover:bg-pink-700">{editingReglement ? 'Modifier' : 'Créer'}</Button>

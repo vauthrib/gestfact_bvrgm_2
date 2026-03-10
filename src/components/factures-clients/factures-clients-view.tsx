@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Plus, Pencil, Trash2, Search, CheckCircle, Download, Printer } from 'lucide-react';
+import { Plus, Pencil, Trash2, Search, CheckCircle, Download, Printer, ArrowUp, ArrowDown, ArrowUpDown } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ExportDialog } from '@/components/import-export/export-dialog';
 import { PrintDocument } from '@/components/print/print-document';
@@ -21,6 +21,9 @@ interface Parametres { nomEntreprise: string; adresseEntreprise?: string; villeE
 
 const parseNumber = (v: string | number) => { if (!v) return 0; if (typeof v === 'number') return v; return parseFloat(v.replace(',', '.').replace(/\s/g, '')) || 0; };
 const formatCurrency = (a: number) => `${a.toLocaleString('fr-MA', { minimumFractionDigits: 2 })} DH`;
+
+type SortField = 'numero' | 'dateFacture' | 'client' | 'totalHT' | 'totalTVA' | 'totalTTC' | 'statut';
+type SortDirection = 'asc' | 'desc';
 
 export function FacturesClientsView() {
   const [factures, setFactures] = useState<FactureClient[]>([]);
@@ -36,16 +39,19 @@ export function FacturesClientsView() {
   const [editing, setEditing] = useState<FactureClient | null>(null);
   const [lignes, setLignes] = useState<LigneFacture[]>([{ designation: '', quantite: '1', prixUnitaire: '0', tauxTVA: '20', totalHT: 0 }]);
   const [formData, setFormData] = useState({ numero: '', dateFacture: new Date().toISOString().split('T')[0], clientId: '', dateEcheance: '', infoLibre: '', notes: '' });
+  
+  // Sorting and filtering
+  const [sortField, setSortField] = useState<SortField>('dateFacture');
+  const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
 
   useEffect(() => { fetchFactures(); fetchClients(); fetchArticles(); fetchParametres(); }, []);
   
-  // Recharger les données à l'ouverture du dialogue
   useEffect(() => {
     if (dialogOpen) {
       fetchClients();
       fetchArticles();
-      
-      // Si on est en mode édition, charger les données de la facture
       if (editing) {
         setFormData({
           numero: editing.numero,
@@ -57,13 +63,9 @@ export function FacturesClientsView() {
         });
         if (editing.lignes && editing.lignes.length > 0) {
           setLignes(editing.lignes.map(l => ({
-            id: l.id,
-            articleId: l.articleId,
-            designation: l.designation,
-            quantite: l.quantite.toString(),
-            prixUnitaire: l.prixUnitaire.toString(),
-            tauxTVA: l.tauxTVA.toString(),
-            totalHT: l.totalHT
+            id: l.id, articleId: l.articleId, designation: l.designation,
+            quantite: l.quantite.toString(), prixUnitaire: l.prixUnitaire.toString(),
+            tauxTVA: l.tauxTVA.toString(), totalHT: l.totalHT
           })));
         }
       }
@@ -101,30 +103,19 @@ export function FacturesClientsView() {
     if (!formData.clientId) { alert('Sélectionnez un client'); return; }
     const validLignes = lignes.filter(l => l.designation.trim() && parseNumber(l.quantite) > 0);
     if (validLignes.length === 0) { alert('Ajoutez au moins une ligne'); return; }
-    
     try {
-      const body = JSON.stringify({
-        ...formData,
-        id: editing?.id,
-        dateEcheance: formData.dateEcheance || formData.dateFacture,
-        lignes: validLignes.map(l => ({ ...l, quantite: parseNumber(l.quantite), prixUnitaire: parseNumber(l.prixUnitaire), tauxTVA: parseNumber(l.tauxTVA), totalHT: l.totalHT })),
-        totalHT: calcTotalHT(), totalTVA: calcTotalTVA(), totalTTC: calcTotalTTC()
-      });
-      
       const res = await fetch('/api/factures-clients', {
         method: editing ? 'PUT' : 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body
+        body: JSON.stringify({
+          ...formData, id: editing?.id,
+          dateEcheance: formData.dateEcheance || formData.dateFacture,
+          lignes: validLignes.map(l => ({ ...l, quantite: parseNumber(l.quantite), prixUnitaire: parseNumber(l.prixUnitaire), tauxTVA: parseNumber(l.tauxTVA), totalHT: l.totalHT })),
+          totalHT: calcTotalHT(), totalTVA: calcTotalTVA(), totalTTC: calcTotalTTC()
+        })
       });
-      
-      if (res.ok) { 
-        setDialogOpen(false); 
-        resetForm(); 
-        fetchFactures(); 
-      } else { 
-        const err = await res.json(); 
-        alert(err.error || 'Erreur'); 
-      }
+      if (res.ok) { setDialogOpen(false); resetForm(); fetchFactures(); }
+      else { const err = await res.json(); alert(err.error || 'Erreur'); }
     } catch (e) { console.error(e); alert('Erreur serveur'); }
   };
 
@@ -138,22 +129,16 @@ export function FacturesClientsView() {
       const fullFacture = allFactures.find((f: any) => f.id === facture.id);
       setSelectedFacture(fullFacture || facture);
       setPrintOpen(true);
-    } catch (e) {
-      setSelectedFacture(facture);
-      setPrintOpen(true);
-    }
+    } catch (e) { setSelectedFacture(facture); setPrintOpen(true); }
   };
 
   const openEditDialog = async (facture: FactureClient) => {
-    // Recharger les données complètes de la facture depuis le serveur
     try {
       const res = await fetch('/api/factures-clients');
       const allFactures = await res.json();
       const fullFacture = allFactures.find((f: any) => f.id === facture.id);
       setEditing(fullFacture || facture);
-    } catch (e) {
-      setEditing(facture);
-    }
+    } catch (e) { setEditing(facture); }
     setDialogOpen(true);
   };
 
@@ -169,7 +154,46 @@ export function FacturesClientsView() {
     return `${prefixe}${(numeroDepart + factures.length).toString().padStart(5, '0')}`;
   };
 
-  const filtered = factures.filter(f => f.numero?.toLowerCase().includes(search.toLowerCase()) || f.client?.raisonSociale?.toLowerCase().includes(search.toLowerCase()));
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDirection('desc');
+    }
+  };
+
+  const SortIcon = ({ field }: { field: SortField }) => {
+    if (sortField !== field) return <ArrowUpDown className="w-4 h-4 ml-1 inline opacity-50" />;
+    return sortDirection === 'asc' ? <ArrowUp className="w-4 h-4 ml-1 inline" /> : <ArrowDown className="w-4 h-4 ml-1 inline" />;
+  };
+
+  // Filter and sort data
+  const filtered = factures
+    .filter(f => {
+      const matchSearch = f.numero?.toLowerCase().includes(search.toLowerCase()) || f.client?.raisonSociale?.toLowerCase().includes(search.toLowerCase());
+      const factureDate = new Date(f.dateFacture);
+      const matchDateFrom = !dateFrom || factureDate >= new Date(dateFrom);
+      const matchDateTo = !dateTo || factureDate <= new Date(dateTo + 'T23:59:59');
+      return matchSearch && matchDateFrom && matchDateTo;
+    })
+    .sort((a, b) => {
+      let valA: any, valB: any;
+      switch (sortField) {
+        case 'numero': valA = a.numero; valB = b.numero; break;
+        case 'dateFacture': valA = new Date(a.dateFacture).getTime(); valB = new Date(b.dateFacture).getTime(); break;
+        case 'client': valA = a.client?.raisonSociale || ''; valB = b.client?.raisonSociale || ''; break;
+        case 'totalHT': valA = a.totalHT; valB = b.totalHT; break;
+        case 'totalTVA': valA = a.totalTVA; valB = b.totalTVA; break;
+        case 'totalTTC': valA = a.totalTTC; valB = b.totalTTC; break;
+        case 'statut': valA = a.statut; valB = b.statut; break;
+        default: return 0;
+      }
+      if (typeof valA === 'string') {
+        return sortDirection === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
+      }
+      return sortDirection === 'asc' ? valA - valB : valB - valA;
+    });
 
   if (loading) return <div className="p-8">Chargement...</div>;
 
@@ -186,10 +210,37 @@ export function FacturesClientsView() {
       <Card>
         <CardHeader><CardTitle>Liste</CardTitle></CardHeader>
         <CardContent>
-          <div className="mb-4"><div className="relative"><Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" /><Input placeholder="Rechercher..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-10" /></div></div>
+          <div className="mb-4 flex flex-wrap gap-4 items-center">
+            <div className="relative flex-1 min-w-[200px]">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Input placeholder="Rechercher..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-10" />
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground">Du:</span>
+              <Input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} className="w-40" />
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground">Au:</span>
+              <Input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} className="w-40" />
+            </div>
+            {(dateFrom || dateTo) && (
+              <Button variant="ghost" size="sm" onClick={() => { setDateFrom(''); setDateTo(''); }}>Effacer</Button>
+            )}
+          </div>
           {filtered.length === 0 ? <div className="text-center text-muted-foreground py-8">Aucune facture</div> : (
             <Table>
-              <TableHeader><TableRow><TableHead>N°</TableHead><TableHead>Date</TableHead><TableHead>Client</TableHead><TableHead>Total HT</TableHead><TableHead>TVA</TableHead><TableHead>Total TTC</TableHead><TableHead>Statut</TableHead><TableHead>Actions</TableHead></TableRow></TableHeader>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="cursor-pointer hover:bg-gray-100" onClick={() => handleSort('numero')}>N° <SortIcon field="numero" /></TableHead>
+                  <TableHead className="cursor-pointer hover:bg-gray-100" onClick={() => handleSort('dateFacture')}>Date <SortIcon field="dateFacture" /></TableHead>
+                  <TableHead className="cursor-pointer hover:bg-gray-100" onClick={() => handleSort('client')}>Client <SortIcon field="client" /></TableHead>
+                  <TableHead className="cursor-pointer hover:bg-gray-100" onClick={() => handleSort('totalHT')}>Total HT <SortIcon field="totalHT" /></TableHead>
+                  <TableHead className="cursor-pointer hover:bg-gray-100" onClick={() => handleSort('totalTVA')}>TVA <SortIcon field="totalTVA" /></TableHead>
+                  <TableHead className="cursor-pointer hover:bg-gray-100" onClick={() => handleSort('totalTTC')}>Total TTC <SortIcon field="totalTTC" /></TableHead>
+                  <TableHead className="cursor-pointer hover:bg-gray-100" onClick={() => handleSort('statut')}>Statut <SortIcon field="statut" /></TableHead>
+                  <TableHead>Actions</TableHead>
+                </TableRow>
+              </TableHeader>
               <TableBody>{filtered.map((f) => (<TableRow key={f.id}>
                 <TableCell className="font-medium">{f.numero}</TableCell>
                 <TableCell>{new Date(f.dateFacture).toLocaleDateString('fr-FR')}</TableCell>

@@ -45,9 +45,12 @@ export function TiersView() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const url = editingTiers ? `/api/tiers?id=${editingTiers.id}` : '/api/tiers';
-      const method = editingTiers ? 'PUT' : 'POST';
-      const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(formData) });
+      const body = { ...formData, id: editingTiers?.id };
+      const res = await fetch('/api/tiers', {
+        method: editingTiers ? 'PUT' : 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
       if (res.ok) { setDialogOpen(false); resetForm(); fetchTiers(); }
       else { const err = await res.json(); alert(err.error || 'Erreur'); }
     } catch (e) { alert('Erreur serveur'); }

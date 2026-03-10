@@ -43,11 +43,16 @@ export function ArticlesView() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const url = editingArticle ? `/api/articles?id=${editingArticle.id}` : '/api/articles';
-      const method = editingArticle ? 'PUT' : 'POST';
-      const res = await fetch(url, {
-        method, headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...formData, prixUnitaire: parseNumber(formData.prixUnitaire), tauxTVA: parseNumber(formData.tauxTVA) })
+      const body = { 
+        ...formData, 
+        id: editingArticle?.id,
+        prixUnitaire: parseNumber(formData.prixUnitaire), 
+        tauxTVA: parseNumber(formData.tauxTVA) 
+      };
+      const res = await fetch('/api/articles', {
+        method: editingArticle ? 'PUT' : 'POST', 
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
       });
       if (res.ok) { setDialogOpen(false); resetForm(); fetchArticles(); }
       else { const err = await res.json(); alert(err.error || 'Erreur'); }

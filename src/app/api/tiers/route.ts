@@ -20,6 +20,26 @@ export async function POST(request: NextRequest) {
   }
 }
 
+export async function PUT(request: NextRequest) {
+  try {
+    const data = await request.json();
+    const { id, ...updateData } = data;
+    
+    if (!id) {
+      return NextResponse.json({ error: 'ID requis' }, { status: 400 });
+    }
+    
+    const tiers = await prisma.tiers.update({
+      where: { id },
+      data: updateData
+    });
+    return NextResponse.json(tiers);
+  } catch (error: any) {
+    console.error('Erreur PUT tiers:', error);
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+}
+
 export async function DELETE(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
