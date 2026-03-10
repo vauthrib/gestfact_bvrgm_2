@@ -6,8 +6,16 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Upload } from 'lucide-react';
+import { Upload, Trash2, AlertTriangle } from 'lucide-react';
 import { ImportCentralDialog } from '@/components/import-export/import-central-dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '@/components/ui/dialog';
 
 interface Parametres {
   id: string; nomEntreprise: string; adresseEntreprise: string | null;
@@ -24,6 +32,10 @@ export function ParametresView() {
   const [loading, setLoading] = useState(true);
   const [saved, setSaved] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
+  const [clearDataOpen, setClearDataOpen] = useState(false);
+  const [clearCode, setClearCode] = useState('');
+  const [clearError, setClearError] = useState(false);
+  const [clearing, setClearing] = useState(false);
 
   useEffect(() => { fetchParametres(); }, []);
 
@@ -48,6 +60,36 @@ export function ParametresView() {
         setTimeout(() => setSaved(false), 2000);
       }
     } catch (e) { console.error(e); }
+  };
+
+  const handleClearData = async () => {
+    if (clearCode !== '2222') {
+      setClearError(true);
+      return;
+    }
+    
+    setClearing(true);
+    try {
+      const res = await fetch('/api/clear-data', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: clearCode })
+      });
+      
+      if (res.ok) {
+        setClearDataOpen(false);
+        setClearCode('');
+        alert('Toutes les données ont été supprimées avec succès!');
+      } else {
+        const data = await res.json();
+        alert('Erreur: ' + data.error);
+      }
+    } catch (e) { 
+      console.error(e); 
+      alert('Erreur lors de la suppression des données');
+    } finally {
+      setClearing(false);
+    }
   };
 
   if (loading) return <div className="p-8">Chargement...</div>;
@@ -118,6 +160,10 @@ export function ParametresView() {
 
         <div className="flex justify-end gap-4">
           {saved && <span className="text-pink-600 self-center">Paramètres enregistrés!</span>}
+          <Button type="button" variant="destructive" onClick={() => { setClearCode(''); setClearError(false); setClearDataOpen(true); }}>
+            <Trash2 className="w-4 h-4 mr-2" />
+            Vider les données
+          </Button>
           <Button type="button" variant="outline" onClick={() => setImportOpen(true)}>
             <Upload className="w-4 h-4 mr-2" />
             Imports
@@ -126,6 +172,53 @@ export function ParametresView() {
         </div>
       </form>
       <ImportCentralDialog open={importOpen} onOpenChange={setImportOpen} />
+
+      {/* Dialog pour vider les données */}
+      <Dialog open={clearDataOpen} onOpenChange={setClearDataOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-red-600">
+              <AlertTriangle className="w-5 h-5" />
+              Vider toutes les données
+            </DialogTitle>
+            <DialogDescription className="pt-4">
+              Cette action va supprimer définitivement toutes les données de l'application :
+              <ul className="list-disc list-inside mt-2 text-sm">
+                <li>Tous les tiers (clients et fournisseurs)</li>
+                <li>Tous les articles</li>
+                <li>Toutes les factures clients et fournisseurs</li>
+                <li>Tous les bons de livraison</li>
+                <li>Tous les règlements</li>
+              </ul>
+              <p className="mt-4 font-semibold text-red-600">
+                Cette action est irréversible!
+              </p>
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <Label>Entrez le code de confirmation (code import)</Label>
+            <Input
+              type="password"
+              value={clearCode}
+              onChange={(e) => { setClearCode(e.target.value); setClearError(false); }}
+              placeholder="Code à 4 chiffres"
+              className={`mt-2 ${clearError ? 'border-red-500' : ''}`}
+              maxLength={4}
+            />
+            {clearError && <p className="text-red-500 text-sm mt-1">Code incorrect</p>}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setClearDataOpen(false)}>Annuler</Button>
+            <Button 
+              variant="destructive" 
+              onClick={handleClearData}
+              disabled={clearing || clearCode.length !== 4}
+            >
+              {clearing ? 'Suppression...' : 'Confirmer la suppression'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
