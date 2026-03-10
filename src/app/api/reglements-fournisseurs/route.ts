@@ -7,7 +7,12 @@ export async function GET() {
       include: { facture: { include: { fournisseur: true } } },
       orderBy: { createdAt: 'desc' }
     });
-    return NextResponse.json(reglements);
+    // S'assurer que tous les règlements ont un statut
+    const reglementsWithStatut = reglements.map(r => ({
+      ...r,
+      statut: r.statut || 'ENREGISTRE'
+    }));
+    return NextResponse.json(reglementsWithStatut);
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
@@ -16,10 +21,17 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const data = await request.json();
+    const count = await prisma.reglementFournisseur.count();
     const reglement = await prisma.reglementFournisseur.create({
       data: {
-        ...data,
-        dateReglement: new Date(data.dateReglement)
+        factureId: data.factureId,
+        dateReglement: new Date(data.dateReglement),
+        montant: data.montant,
+        modePaiement: data.modePaiement || 'VIREMENT',
+        reference: data.reference || null,
+        infoLibre: data.infoLibre || null,
+        notes: data.notes || null,
+        statut: 'ENREGISTRE',
       },
       include: { facture: { include: { fournisseur: true } } }
     });
