@@ -3,7 +3,7 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 
@@ -206,6 +206,8 @@ model Parametres {
   numeroFactureDepart   Int?
   prefixeBL             String?
   numeroBLDepart        Int?
+  letterheadImage       String?  // Base64 image du papier à en-tête
+  printLayout           String?  // JSON string - Configuration des positions des éléments
   createdAt             DateTime @default(now())
   updatedAt             DateTime @updatedAt
 }

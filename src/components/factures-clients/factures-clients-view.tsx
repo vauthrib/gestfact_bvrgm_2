@@ -17,7 +17,12 @@ interface LigneFacture { id?: string; articleId?: string; designation: string; q
 interface FactureClient { id: string; numero: string; dateFacture: string; clientId: string; dateEcheance: string; statut: string; infoLibre: string | null; notes: string | null; totalHT: number; totalTVA: number; totalTTC: number; client: { raisonSociale: string; adresse?: string; ville?: string; ice?: string }; lignes?: LigneFacture[]; }
 interface Tiers { id: string; code: string; raisonSociale: string; type: string; }
 interface Article { id: string; code: string; designation: string; prixUnitaire: number; tauxTVA: number; }
-interface Parametres { nomEntreprise: string; adresseEntreprise?: string; villeEntreprise?: string; telephoneEntreprise?: string; emailEntreprise?: string; ice?: string; rc?: string; rcLieu?: string; prefixeFacture?: string; numeroFactureDepart?: number; }
+interface Parametres { 
+  nomEntreprise: string; adresseEntreprise?: string; villeEntreprise?: string; 
+  telephoneEntreprise?: string; emailEntreprise?: string; ice?: string; 
+  rc?: string; rcLieu?: string; prefixeFacture?: string; numeroFactureDepart?: number;
+  letterheadImage?: string | null; printLayout?: string | null;
+}
 
 const parseNumber = (v: string | number) => { if (!v) return 0; if (typeof v === 'number') return v; return parseFloat(v.replace(',', '.').replace(/\s/g, '')) || 0; };
 const formatCurrency = (a: number) => `${a.toLocaleString('fr-MA', { minimumFractionDigits: 2 })} DH`;
@@ -373,7 +378,16 @@ export function FacturesClientsView() {
         </DialogContent>
       </Dialog>
       <ExportDialog open={exportOpen} onOpenChange={setExportOpen} type="factures-clients" code="NFC01" />
-      <PrintDocument open={printOpen} onOpenChange={setPrintOpen} documentType="FC" documentData={selectedFacture} entreprise={parametres} code="NFC01" />
+      <PrintDocument 
+        open={printOpen} 
+        onOpenChange={setPrintOpen} 
+        documentType="FC" 
+        documentData={selectedFacture} 
+        entreprise={parametres} 
+        code="NFC01"
+        printLayout={parametres?.printLayout ? JSON.parse(parametres.printLayout) : null}
+        letterheadImage={parametres?.letterheadImage}
+      />
     </div>
   );
 }

@@ -6,8 +6,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Upload, Trash2, AlertTriangle } from 'lucide-react';
+import { Upload, Trash2, AlertTriangle, Layout, Printer } from 'lucide-react';
 import { ImportCentralDialog } from '@/components/import-export/import-central-dialog';
+import { PrintLayoutEditor } from '@/components/print/print-layout-editor';
 import {
   Dialog,
   DialogContent,
@@ -17,6 +18,23 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 
+interface LayoutElement {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  visible: boolean;
+}
+
+interface PrintLayout {
+  docInfo: LayoutElement;
+  clientInfo: LayoutElement;
+  tableStart: LayoutElement;
+  totals: LayoutElement;
+  footer: LayoutElement;
+  margins: { top: number; right: number; bottom: number; left: number };
+}
+
 interface Parametres {
   id: string; nomEntreprise: string; adresseEntreprise: string | null;
   villeEntreprise: string | null; telephoneEntreprise: string | null;
@@ -25,7 +43,17 @@ interface Parametres {
   cnss: string | null; infoLibre: string | null; tvaDefaut: number;
   prefixeFacture: string | null; numeroFactureDepart: number | null;
   prefixeBL: string | null; numeroBLDepart: number | null;
+  letterheadImage: string | null; printLayout: string | null;
 }
+
+const DEFAULT_LAYOUT: PrintLayout = {
+  docInfo: { x: 120, y: 10, width: 80, height: 30, visible: true },
+  clientInfo: { x: 10, y: 60, width: 90, height: 40, visible: true },
+  tableStart: { x: 10, y: 110, width: 190, height: 100, visible: true },
+  totals: { x: 130, y: 220, width: 70, height: 40, visible: true },
+  footer: { x: 10, y: 270, width: 190, height: 20, visible: true },
+  margins: { top: 10, right: 10, bottom: 10, left: 10 }
+};
 
 export function ParametresView() {
   const [parametres, setParametres] = useState<Parametres | null>(null);
@@ -36,6 +64,7 @@ export function ParametresView() {
   const [clearCode, setClearCode] = useState('');
   const [clearError, setClearError] = useState(false);
   const [clearing, setClearing] = useState(false);
+  const [layoutEditorOpen, setLayoutEditorOpen] = useState(false);
 
   useEffect(() => { fetchParametres(); }, []);
 
@@ -89,6 +118,39 @@ export function ParametresView() {
       alert('Erreur lors de la suppression des données');
     } finally {
       setClearing(false);
+    }
+  };
+
+  const handleSaveLayout = async (letterheadImage: string | null, layout: PrintLayout) => {
+    try {
+      const res = await fetch('/api/parametres', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...parametres,
+          letterheadImage,
+          printLayout: JSON.stringify(layout)
+        })
+      });
+      
+      if (res.ok) {
+        const data = await res.json();
+        setParametres(data);
+        setLayoutEditorOpen(false);
+        alert('Mise en page enregistrée avec succès!');
+      }
+    } catch (e) {
+      console.error(e);
+      alert('Erreur lors de l\'enregistrement de la mise en page');
+    }
+  };
+
+  const getParsedLayout = (): PrintLayout | null => {
+    if (!parametres?.printLayout) return null;
+    try {
+      return JSON.parse(parametres.printLayout);
+    } catch {
+      return null;
     }
   };
 
@@ -158,8 +220,12 @@ export function ParametresView() {
           </CardContent>
         </Card>
 
-        <div className="flex justify-end gap-4">
+        <div className="flex justify-end gap-4 flex-wrap">
           {saved && <span className="text-pink-600 self-center">Paramètres enregistrés!</span>}
+          <Button type="button" variant="outline" onClick={() => setLayoutEditorOpen(true)} className="border-pink-300 text-pink-700 hover:bg-pink-50">
+            <Printer className="w-4 h-4 mr-2" />
+            Mise en page impression
+          </Button>
           <Button type="button" variant="destructive" onClick={() => { setClearCode(''); setClearError(false); setClearDataOpen(true); }}>
             <Trash2 className="w-4 h-4 mr-2" />
             Vider les données
@@ -219,6 +285,16 @@ export function ParametresView() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Print Layout Editor */}
+      <PrintLayoutEditor
+        open={layoutEditorOpen}
+        onOpenChange={setLayoutEditorOpen}
+        entreprise={parametres}
+        letterheadImage={parametres?.letterheadImage || null}
+        printLayout={getParsedLayout()}
+        onSave={handleSaveLayout}
+      />
     </div>
   );
 }
