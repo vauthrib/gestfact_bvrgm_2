@@ -13,9 +13,29 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const data = await request.json();
-    const article = await prisma.article.create({ data });
+    
+    // Trim and normalize the code (allow spaces and special chars)
+    const code = data.code?.trim() || '';
+    
+    if (!code) {
+      return NextResponse.json({ error: 'Le code article est requis' }, { status: 400 });
+    }
+    
+    // Check if code already exists
+    const existing = await prisma.article.findUnique({ where: { code } });
+    if (existing) {
+      return NextResponse.json({ error: `Le code "${code}" existe déjà. Veuillez utiliser un code unique.` }, { status: 400 });
+    }
+    
+    const article = await prisma.article.create({ 
+      data: {
+        ...data,
+        code
+      }
+    });
     return NextResponse.json(article);
   } catch (error: any) {
+    console.error('Erreur création article:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
@@ -29,10 +49,28 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'ID requis' }, { status: 400 });
     }
     
+    // Trim and normalize the code
+    const code = updateData.code?.trim() || '';
+    
+    if (!code) {
+      return NextResponse.json({ error: 'Le code article est requis' }, { status: 400 });
+    }
+    
+    // Check if code already exists (for a different article)
+    const existing = await prisma.article.findFirst({ 
+      where: { 
+        code,
+        NOT: { id }
+      } 
+    });
+    if (existing) {
+      return NextResponse.json({ error: `Le code "${code}" existe déjà. Veuillez utiliser un code unique.` }, { status: 400 });
+    }
+    
     const article = await prisma.article.update({
       where: { id },
       data: {
-        code: updateData.code,
+        code,
         designation: updateData.designation,
         prixUnitaire: updateData.prixUnitaire,
         unite: updateData.unite,

@@ -133,7 +133,16 @@ export function ArticlesView() {
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* Row 1: Code */}
             <div className="grid grid-cols-4 gap-4">
-              <div><Label>Code</Label><Input value={formData.code} onChange={(e) => setFormData({ ...formData, code: e.target.value })} required /></div>
+              <div>
+                <Label>Code Article</Label>
+                <Input 
+                  value={formData.code} 
+                  onChange={(e) => setFormData({ ...formData, code: e.target.value })} 
+                  placeholder="Ex: REF-001, A 123, etc."
+                  required 
+                />
+                <p className="text-xs text-muted-foreground mt-1">Code libre (espaces et caractères spéciaux autorisés)</p>
+              </div>
               <div><Label>Prix Unitaire HT</Label><Input type="text" value={formData.prixUnitaire} onChange={(e) => setFormData({ ...formData, prixUnitaire: e.target.value })} required /></div>
               <div></div>
               <div></div>

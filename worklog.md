@@ -57,3 +57,43 @@ Stage Summary:
 - Print layout now properly displays BC (Bon de Commande) and BL (Bon de Livraison)
 - Zone docInfo enlarged to fit additional fields
 - Deployed to Vercel
+
+---
+Task ID: 4
+Agent: Main Agent
+Task: V1.77 - Mise à jour version
+
+Work Log:
+- Updated all version references from V1.76 to V1.77
+- Files updated: layout.tsx, globals.css, app-sidebar.tsx, print-document.tsx, dashboard-view.tsx, secret-code-gate.tsx
+- Version badge remains yellow (bg-yellow-400)
+- Pushed to GitHub for Vercel deployment
+
+Stage Summary:
+- Version V1.77 deployed
+- No functional changes, version bump only
+
+---
+Task ID: 5
+Agent: Main Agent
+Task: V1.78 - Page login bleu et flexibilité codes article
+
+Work Log:
+- Changed login page (secret-code-gate.tsx) colors from green to blue
+  - Background: from-green-50 → from-blue-50
+  - Title: text-green-700 → text-blue-700
+  - Button: bg-green-600 → bg-blue-600
+  - Badge: bg-green-100 → bg-blue-100
+- Updated articles API to handle flexible codes
+  - Added trim() to normalize codes
+  - Added explicit uniqueness check before create/update
+  - Better error messages for duplicate codes (French)
+- Updated articles form UI
+  - Added helper text: "Code libre (espaces et caractères spéciaux autorisés)"
+- Updated all version references to V1.78
+
+Stage Summary:
+- Login page is now blue while rest of app stays green
+- Article codes are flexible (spaces, special chars allowed) but must remain unique
+- Better user feedback on duplicate code errors
+- Ready for deployment

@@ -43,7 +43,7 @@
   --radius-xl: calc(var(--radius) + 4px);
 }
 
-/* Green Pale Theme V1.77 */
+/* Green Pale Theme V1.78 */
 :root {
   --radius: 0.625rem;
   --background: oklch(0.98 0.01 145);
