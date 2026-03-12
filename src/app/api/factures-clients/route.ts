@@ -38,23 +38,31 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const data = await request.json();
-    const { lignes, numero: numeroFourni, ...factureData } = data;
+    const { lignes, numero: _numeroFourni, ...factureData } = data;
 
     // Générer un numéro unique (ignorer le numéro fourni par le frontend)
     const numero = await genererNumeroUnique();
 
     const facture = await prisma.factureClient.create({
       data: {
-        ...factureData,
         numero,
         dateFacture: new Date(factureData.dateFacture),
-        dateEcheance: new Date(factureData.dateEcheance),
+        dateEcheance: new Date(factureData.dateEcheance || factureData.dateFacture),
+        clientId: factureData.clientId,
+        bonCommande: factureData.bonCommande || null,
+        numeroBL: factureData.numeroBL || null,
+        infoLibre: factureData.infoLibre || null,
+        notes: factureData.notes || null,
+        totalHT: factureData.totalHT || 0,
+        totalTVA: factureData.totalTVA || 0,
+        totalTTC: factureData.totalTTC || 0,
         lignes: { create: lignes }
       },
       include: { lignes: true, client: true }
     });
     return NextResponse.json(facture);
   } catch (error: any) {
+    console.error('Erreur création facture:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
@@ -74,15 +82,22 @@ export async function PUT(request: NextRequest) {
     const facture = await prisma.factureClient.update({
       where: { id },
       data: {
-        ...factureData,
         dateFacture: factureData.dateFacture ? new Date(factureData.dateFacture) : undefined,
         dateEcheance: factureData.dateEcheance ? new Date(factureData.dateEcheance) : undefined,
+        bonCommande: factureData.bonCommande || null,
+        numeroBL: factureData.numeroBL || null,
+        infoLibre: factureData.infoLibre || null,
+        notes: factureData.notes || null,
+        totalHT: factureData.totalHT,
+        totalTVA: factureData.totalTVA,
+        totalTTC: factureData.totalTTC,
         lignes: { create: lignes || [] }
       },
       include: { lignes: true, client: true }
     });
     return NextResponse.json(facture);
   } catch (error: any) {
+    console.error('Erreur modification facture:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
