@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Plus, Pencil, Trash2, Search, Users, Download } from 'lucide-react';
+import { Plus, Pencil, Trash2, Search, Users, Download, ArrowUp, ArrowDown, ArrowUpDown } from 'lucide-react';
 import { ExportDialog } from '@/components/import-export/export-dialog';
 
 interface Tiers {
@@ -19,6 +19,9 @@ interface Tiers {
   rc: string | null; rcLieu: string | null; cnss: string | null;
   infoLibre: string | null; notes: string | null;
 }
+
+type SortField = 'raisonSociale' | 'ville' | 'telephone' | 'email';
+type SortDirection = 'asc' | 'desc';
 
 export function TiersView() {
   const [tiers, setTiers] = useState<Tiers[]>([]);
@@ -31,6 +34,10 @@ export function TiersView() {
     code: '', type: 'CLIENT', raisonSociale: '', adresse: '', adresse2: '', codePostal: '',
     ville: '', pays: '', telephone: '', email: '', ice: '', rc: '', rcLieu: '', cnss: '', infoLibre: '', notes: ''
   });
+  
+  // Sorting state
+  const [sortField, setSortField] = useState<SortField>('raisonSociale');
+  const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
 
   useEffect(() => { fetchTiers(); }, []);
 
@@ -81,6 +88,34 @@ export function TiersView() {
 
   const generateCode = () => setFormData({ ...formData, code: `T${(tiers.length + 1).toString().padStart(4, '0')}` });
   const filteredTiers = tiers.filter(t => t.raisonSociale?.toLowerCase().includes(search.toLowerCase()) || t.code?.toLowerCase().includes(search.toLowerCase()));
+  
+  // Sorting functions
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDirection('asc');
+    }
+  };
+  
+  const SortIcon = ({ field }: { field: SortField }) => {
+    if (sortField !== field) return <ArrowUpDown className="w-4 h-4 ml-1 inline opacity-50" />;
+    return sortDirection === 'asc' ? <ArrowUp className="w-4 h-4 ml-1 inline" /> : <ArrowDown className="w-4 h-4 ml-1 inline" />;
+  };
+  
+  // Sorted data
+  const sortedTiers = [...filteredTiers].sort((a, b) => {
+    let valA: string, valB: string;
+    switch (sortField) {
+      case 'raisonSociale': valA = a.raisonSociale || ''; valB = b.raisonSociale || ''; break;
+      case 'ville': valA = a.ville || ''; valB = b.ville || ''; break;
+      case 'telephone': valA = a.telephone || ''; valB = b.telephone || ''; break;
+      case 'email': valA = a.email || ''; valB = b.email || ''; break;
+      default: return 0;
+    }
+    return sortDirection === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
+  });
 
   if (loading) return <div className="p-8">Chargement...</div>;
 
@@ -105,11 +140,18 @@ export function TiersView() {
           <div className="mb-4"><div className="relative"><Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" /><Input placeholder="Rechercher..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-10" /></div></div>
           {filteredTiers.length === 0 ? <div className="text-center text-muted-foreground py-8">Aucun tiers</div> : (
             <Table>
-              <TableHeader><TableRow><TableHead>Code</TableHead><TableHead>Type</TableHead><TableHead>Raison Sociale</TableHead><TableHead>Ville</TableHead><TableHead>Téléphone</TableHead><TableHead>Actions</TableHead></TableRow></TableHeader>
-              <TableBody>{filteredTiers.map((t) => (<TableRow key={t.id}>
-                <TableCell className="font-medium">{t.code}</TableCell>
-                <TableCell><span className={`px-2 py-1 rounded text-xs ${t.type === 'CLIENT' ? 'bg-blue-100 text-blue-800' : 'bg-sky-100 text-sky-800'}`}>{t.type}</span></TableCell>
-                <TableCell>{t.raisonSociale}</TableCell><TableCell>{t.ville}</TableCell><TableCell>{t.telephone}</TableCell>
+              <TableHeader><TableRow>
+                <TableHead className="cursor-pointer hover:bg-gray-100" onClick={() => handleSort('raisonSociale')}>Raison Sociale <SortIcon field="raisonSociale" /></TableHead>
+                <TableHead className="cursor-pointer hover:bg-gray-100" onClick={() => handleSort('ville')}>Ville <SortIcon field="ville" /></TableHead>
+                <TableHead className="cursor-pointer hover:bg-gray-100" onClick={() => handleSort('telephone')}>Téléphone <SortIcon field="telephone" /></TableHead>
+                <TableHead className="cursor-pointer hover:bg-gray-100" onClick={() => handleSort('email')}>Email <SortIcon field="email" /></TableHead>
+                <TableHead>Actions</TableHead>
+              </TableRow></TableHeader>
+              <TableBody>{sortedTiers.map((t) => (<TableRow key={t.id}>
+                <TableCell className="font-medium">{t.raisonSociale}</TableCell>
+                <TableCell>{t.ville}</TableCell>
+                <TableCell>{t.telephone}</TableCell>
+                <TableCell>{t.email}</TableCell>
                 <TableCell><div className="flex gap-2">
                   <Button size="sm" variant="outline" onClick={() => openEditDialog(t)}><Pencil className="h-4 w-4" /></Button>
                   <Button size="sm" variant="destructive" onClick={() => handleDelete(t.id)}><Trash2 className="h-4 w-4" /></Button>
