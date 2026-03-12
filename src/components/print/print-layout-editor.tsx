@@ -16,14 +16,14 @@ const PX_PER_MM = 3.779527559; // 96 DPI
 
 // Default layout positions (in mm from top-left)
 const DEFAULT_LAYOUT = {
-  // Document info (number, date) - top right
-  docInfo: { x: 120, y: 10, width: 80, height: 30, visible: true },
+  // Document info (number, date, BC, BL) - top right
+  docInfo: { x: 120, y: 10, width: 80, height: 45, visible: true },
   // Client info - below header
   clientInfo: { x: 10, y: 60, width: 90, height: 40, visible: true },
   // Table start position
-  tableStart: { x: 10, y: 110, width: 190, height: 100, visible: true },
+  tableStart: { x: 10, y: 120, width: 190, height: 100, visible: true },
   // Totals - right side below table
-  totals: { x: 130, y: 220, width: 70, height: 40, visible: true },
+  totals: { x: 130, y: 230, width: 70, height: 40, visible: true },
   // Footer - bottom
   footer: { x: 10, y: 270, width: 190, height: 20, visible: true },
   // Page margins
@@ -188,7 +188,7 @@ export function PrintLayoutEditor({
   });
 
   const elements: { key: keyof PrintLayout; label: string; content: string }[] = [
-    { key: 'docInfo', label: 'Infos Document', content: 'N° FC-2024-001\nDate: 15/01/2024' },
+    { key: 'docInfo', label: 'Infos Document', content: 'N° FC-2024-001\nDate: 15/01/2024\nBC: BC-123\nBL: BL-456' },
     { key: 'clientInfo', label: 'Infos Client', content: 'CLIENT\nRaison Sociale\nAdresse' },
     { key: 'tableStart', label: 'Tableau', content: 'Désignation | Qté | PU | Total' },
     { key: 'totals', label: 'Totaux', content: 'Total HT\nTVA\nTotal TTC' },

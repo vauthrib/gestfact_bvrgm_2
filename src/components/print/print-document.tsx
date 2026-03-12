@@ -47,10 +47,10 @@ const PRIMARY_LIGHT = '#dcfce7'; // green-100
 const PRIMARY_TEXT = '#15803d'; // green-700
 
 const DEFAULT_LAYOUT: PrintLayout = {
-  docInfo: { x: 120, y: 10, width: 80, height: 30, visible: true },
+  docInfo: { x: 120, y: 10, width: 80, height: 45, visible: true },
   clientInfo: { x: 10, y: 60, width: 90, height: 40, visible: true },
-  tableStart: { x: 10, y: 110, width: 190, height: 100, visible: true },
-  totals: { x: 130, y: 220, width: 70, height: 40, visible: true },
+  tableStart: { x: 10, y: 120, width: 190, height: 100, visible: true },
+  totals: { x: 130, y: 230, width: 70, height: 40, visible: true },
   footer: { x: 10, y: 270, width: 190, height: 20, visible: true },
   margins: { top: 10, right: 10, bottom: 10, left: 10 }
 };
