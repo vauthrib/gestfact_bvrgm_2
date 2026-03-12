@@ -94,11 +94,6 @@ export function ArticlesView() {
           <Button className="bg-green-600 hover:bg-green-700" onClick={() => { resetForm(); generateCode(); setDialogOpen(true); }}><Plus className="w-4 h-4 mr-2" />Nouveau</Button>
         </div>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card><CardHeader className="flex flex-row items-center justify-between pb-2"><CardTitle className="text-sm font-medium text-muted-foreground">Total</CardTitle><Package className="w-4 h-4" /></CardHeader><CardContent><div className="text-2xl font-bold">{articles.length}</div></CardContent></Card>
-        <Card><CardHeader className="flex flex-row items-center justify-between pb-2"><CardTitle className="text-sm font-medium text-muted-foreground">Actifs</CardTitle><Package className="w-4 h-4 text-blue-500" /></CardHeader><CardContent><div className="text-2xl font-bold">{articles.filter(a => a.actif).length}</div></CardContent></Card>
-        <Card><CardHeader className="flex flex-row items-center justify-between pb-2"><CardTitle className="text-sm font-medium text-muted-foreground">Inactifs</CardTitle><Package className="w-4 h-4 text-gray-400" /></CardHeader><CardContent><div className="text-2xl font-bold">{articles.filter(a => !a.actif).length}</div></CardContent></Card>
-      </div>
       <Card>
         <CardHeader><CardTitle>Liste des Articles</CardTitle></CardHeader>
         <CardContent>
