@@ -24,7 +24,7 @@ const importOptions: { type: ImportType; label: string; icon: React.ReactNode; c
   { type: 'bons-livraison', label: 'Bons de Livraison', icon: <Truck className="w-5 h-5" />, color: 'amber' },
 ];
 
-const SECRET_CODE = '2222';
+const SECRET_CODE = '4444';
 
 export function ImportCentralDialog({ open, onOpenChange }: ImportCentralDialogProps) {
   const [step, setStep] = useState<'code' | 'imports'>('code');

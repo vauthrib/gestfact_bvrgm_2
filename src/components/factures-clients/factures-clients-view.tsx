@@ -165,7 +165,7 @@ export function FacturesClientsView() {
   };
 
   const handleCodeSubmit = async () => {
-    if (codeInput === '1111') {
+    if (codeInput === '3333') {
       setCodeDialogOpen(false);
       if (pendingEdit) {
         try {

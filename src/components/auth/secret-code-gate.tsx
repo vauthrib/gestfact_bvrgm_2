@@ -15,7 +15,7 @@ export function SecretCodeGate({ children }: SecretCodeGateProps) {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (code === '1111') {
+    if (code === '3333') {
       setIsAuthenticated(true);
     } else {
       setError(true);

@@ -103,7 +103,7 @@ export function FacturesFournisseursView() {
   };
 
   const handleCodeSubmit = () => {
-    if (codeInput === '1111') {
+    if (codeInput === '3333') {
       setCodeDialogOpen(false);
       if (pendingEdit) {
         setEditing(pendingEdit);

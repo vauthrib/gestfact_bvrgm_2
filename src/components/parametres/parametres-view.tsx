@@ -92,7 +92,7 @@ export function ParametresView() {
   };
 
   const handleClearData = async () => {
-    if (clearCode !== '2222') {
+    if (clearCode !== '4444') {
       setClearError(true);
       return;
     }

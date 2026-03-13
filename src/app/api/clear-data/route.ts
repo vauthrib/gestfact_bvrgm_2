@@ -5,8 +5,8 @@ export async function POST(request: NextRequest) {
   try {
     const { code } = await request.json();
     
-    // Vérifier le code de sécurité (code import: 2222)
-    if (code !== '2222') {
+    // Vérifier le code de sécurité (code import: 4444)
+    if (code !== '4444') {
       return NextResponse.json({ error: 'Code incorrect' }, { status: 401 });
     }
 
