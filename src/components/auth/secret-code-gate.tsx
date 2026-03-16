@@ -26,14 +26,17 @@ export function SecretCodeGate({ children }: SecretCodeGateProps) {
   if (isAuthenticated) return <>{children}</>;
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-orange-50 to-orange-200">
-      <div className="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md border-2 border-orange-300">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-pink-50 to-pink-200">
+      <div className="absolute top-4 left-4">
+        <span className="text-2xl font-bold text-pink-700">SRGA</span>
+      </div>
+      <div className="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md border-2 border-pink-300">
         <div className="text-center mb-6">
           <div className="flex items-center justify-center gap-2 mb-2">
-            <h1 className="text-3xl font-bold text-orange-600">GestFact</h1>
-            <span className="bg-orange-100 text-orange-700 px-3 py-1 rounded-full text-sm font-mono font-bold border border-orange-300">AUT01</span>
+            <h1 className="text-3xl font-bold text-pink-600">GestFact</h1>
+            <span className="bg-pink-100 text-pink-700 px-3 py-1 rounded-full text-sm font-mono font-bold border border-pink-300">AUT01</span>
           </div>
-          <p className="text-sm text-muted-foreground">V1.79</p>
+          <p className="text-sm text-muted-foreground">V1.80</p>
         </div>
         <form onSubmit={handleSubmit} className="space-y-4">
           <Input
@@ -44,7 +47,7 @@ export function SecretCodeGate({ children }: SecretCodeGateProps) {
             className={`text-center text-xl ${error ? 'border-red-500 animate-shake' : ''}`}
             autoFocus
           />
-          <Button type="submit" className="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold">
+          <Button type="submit" className="w-full bg-pink-500 hover:bg-pink-600 text-white font-bold">
             Entrer
           </Button>
         </form>

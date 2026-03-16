@@ -41,10 +41,10 @@ const formatDate = (d: string | Date) => {
   return date.toLocaleDateString('fr-FR');
 };
 
-// Couleur verte pâle pour V1.79
-const PRIMARY_COLOR = '#16a34a'; // green-600
-const PRIMARY_LIGHT = '#dcfce7'; // green-100
-const PRIMARY_TEXT = '#15803d'; // green-700
+// Couleur rose pâle pour SRGA V1.80
+const PRIMARY_COLOR = '#db2777'; // pink-600
+const PRIMARY_LIGHT = '#fce7f3'; // pink-100
+const PRIMARY_TEXT = '#be185d'; // pink-700
 
 const DEFAULT_LAYOUT: PrintLayout = {
   docInfo: { x: 120, y: 10, width: 80, height: 45, visible: true },
@@ -407,7 +407,7 @@ export function PrintDocument({
         <DialogHeader>
           <div className="flex items-center justify-between">
             <DialogTitle>Aperçu - {getTitle()}</DialogTitle>
-            <span className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm font-mono font-bold">{code}-PRT</span>
+            <span className="bg-pink-100 text-pink-700 px-3 py-1 rounded-full text-sm font-mono font-bold">{code}-PRT</span>
           </div>
         </DialogHeader>
 
@@ -416,7 +416,7 @@ export function PrintDocument({
             <Button
               variant={useCustomLayout ? "default" : "outline"}
               onClick={() => setUseCustomLayout(!useCustomLayout)}
-              className={useCustomLayout ? "bg-green-600 hover:bg-green-700" : ""}
+              className={useCustomLayout ? "bg-pink-600 hover:bg-pink-700" : ""}
             >
               <Settings className="w-4 h-4 mr-2" />
               {useCustomLayout ? 'Mise en page personnalisée' : 'Mise en page standard'}
@@ -428,14 +428,14 @@ export function PrintDocument({
             <Button
               variant={hidePrices ? "default" : "outline"}
               onClick={() => setHidePrices(!hidePrices)}
-              className={hidePrices ? "bg-green-600 hover:bg-green-700" : ""}
+              className={hidePrices ? "bg-pink-600 hover:bg-pink-700" : ""}
             >
               <EyeOff className="w-4 h-4 mr-2" />
               {hidePrices ? 'Sans prix' : 'Avec prix'}
             </Button>
           )}
           
-          <Button onClick={handlePrint} className="bg-green-600 hover:bg-green-700">
+          <Button onClick={handlePrint} className="bg-pink-600 hover:bg-pink-700">
             <Printer className="w-4 h-4 mr-2" /> Imprimer
           </Button>
         </div>
@@ -477,7 +477,7 @@ export function PrintDocument({
                   width: mmToPxStr(layout.docInfo.width)
                 }}>
                   <h2 className="text-lg font-bold">{getTitle()}</h2>
-                  <p className="font-bold text-green-700">{getNumero()}</p>
+                  <p className="font-bold text-pink-700">{getNumero()}</p>
                   <p className="text-sm">Date: {formatDate(documentData.dateBL || documentData.dateFacture || documentData.dateReglement)}</p>
                   {documentData.bonCommande && (
                     <p className="text-sm">BC: {documentData.bonCommande}</p>
@@ -513,7 +513,7 @@ export function PrintDocument({
                 }}>
                   <table className="w-full border-collapse">
                     <thead>
-                      <tr className="bg-green-700 text-white">
+                      <tr className="bg-pink-700 text-white">
                         <th className="p-2 text-left text-xs">Désignation</th>
                         <th className="p-2 text-right text-xs w-16">Qté</th>
                         {showPrices && (
@@ -560,13 +560,13 @@ export function PrintDocument({
                     <p>TVA: <span className="font-bold">{formatCurrency(documentData.montantTVA)}</span></p>
                   )}
                   {documentData.totalTTC !== undefined && (
-                    <p className="text-lg font-bold text-green-700">Total TTC: {formatCurrency(documentData.totalTTC)}</p>
+                    <p className="text-lg font-bold text-pink-700">Total TTC: {formatCurrency(documentData.totalTTC)}</p>
                   )}
                   {documentData.montantTTC !== undefined && (
-                    <p className="text-lg font-bold text-green-700">Total TTC: {formatCurrency(documentData.montantTTC)}</p>
+                    <p className="text-lg font-bold text-pink-700">Total TTC: {formatCurrency(documentData.montantTTC)}</p>
                   )}
                   {documentData.montant !== undefined && (
-                    <p className="text-lg font-bold text-green-700">Montant: {formatCurrency(documentData.montant)}</p>
+                    <p className="text-lg font-bold text-pink-700">Montant: {formatCurrency(documentData.montant)}</p>
                   )}
                 </div>
               )}
@@ -586,9 +586,9 @@ export function PrintDocument({
           ) : (
             /* Standard Layout Mode Preview */
             <>
-              <div className="flex justify-between border-b-2 border-green-700 pb-4 mb-6 p-6">
+              <div className="flex justify-between border-b-2 border-pink-700 pb-4 mb-6 p-6">
                 <div>
-                  <h1 className="text-xl font-bold text-green-700">{entreprise?.nomEntreprise || 'Votre Entreprise'}</h1>
+                  <h1 className="text-xl font-bold text-pink-700">{entreprise?.nomEntreprise || 'Votre Entreprise'}</h1>
                   <p className="text-sm text-gray-600">
                     {entreprise?.adresseEntreprise}<br />
                     {entreprise?.villeEntreprise}<br />
@@ -598,7 +598,7 @@ export function PrintDocument({
                 </div>
                 <div className="text-right">
                   <h2 className="text-lg font-bold">{getTitle()}</h2>
-                  <p className="font-bold text-green-700">{getNumero()}</p>
+                  <p className="font-bold text-pink-700">{getNumero()}</p>
                   <p className="text-sm">Date: {formatDate(documentData.dateBL || documentData.dateFacture || documentData.dateReglement)}</p>
                   {documentData.bonCommande && (
                     <p className="text-sm">BC: {documentData.bonCommande}</p>
@@ -623,7 +623,7 @@ export function PrintDocument({
               {lignes.length > 0 && (
                 <table className="w-full border-collapse mb-6 mx-6">
                   <thead>
-                    <tr className="bg-green-700 text-white">
+                    <tr className="bg-pink-700 text-white">
                       <th className="p-2 text-left text-xs">Désignation</th>
                       <th className="p-2 text-right text-xs w-20">Qté</th>
                       {showPrices && (
@@ -665,13 +665,13 @@ export function PrintDocument({
                     <p>TVA: <span className="font-bold">{formatCurrency(documentData.montantTVA)}</span></p>
                   )}
                   {documentData.totalTTC !== undefined && (
-                    <p className="text-lg font-bold text-green-700">Total TTC: {formatCurrency(documentData.totalTTC)}</p>
+                    <p className="text-lg font-bold text-pink-700">Total TTC: {formatCurrency(documentData.totalTTC)}</p>
                   )}
                   {documentData.montantTTC !== undefined && (
-                    <p className="text-lg font-bold text-green-700">Total TTC: {formatCurrency(documentData.montantTTC)}</p>
+                    <p className="text-lg font-bold text-pink-700">Total TTC: {formatCurrency(documentData.montantTTC)}</p>
                   )}
                   {documentData.montant !== undefined && (
-                    <p className="text-lg font-bold text-green-700">Montant: {formatCurrency(documentData.montant)}</p>
+                    <p className="text-lg font-bold text-pink-700">Montant: {formatCurrency(documentData.montant)}</p>
                   )}
                 </div>
               )}
