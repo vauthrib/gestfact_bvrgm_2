@@ -410,7 +410,7 @@ export function DashboardView() {
           .soldes { margin-top: 20px; padding: 15px; background: #fce7f3; border-radius: 8px; }
           .soldes-row { display: flex; justify-content: space-between; margin: 5px 0; }
           .negative { color: #dc2626; }
-          .positive { color: #16a34a; }
+          .positive { color: #db2777; }
         </style>
       </head>
       <body>
@@ -532,7 +532,7 @@ export function DashboardView() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-pink-700">Tableau de bord</h1>
-          <p className="text-muted-foreground">Bienvenue sur SRGA V1.95</p>
+          <p className="text-muted-foreground">Bienvenue sur SRGA V1.96</p>
         </div>
         <div className="flex items-center gap-2">
           <span className="bg-pink-100 text-pink-700 px-3 py-1 rounded-full text-sm font-mono font-bold">TDB01</span>
@@ -666,7 +666,7 @@ export function DashboardView() {
                         </TableCell>
                         <TableCell>{line.numero}</TableCell>
                         <TableCell className="text-right">{line.montantTTC > 0 ? formatCurrency(line.montantTTC) : ''}</TableCell>
-                        <TableCell className={`text-right font-medium ${line.montant < 0 ? 'text-red-600' : line.montant > 0 ? 'text-green-600' : ''}`}>
+                        <TableCell className={`text-right font-medium ${line.type.includes('Règlement') ? 'text-green-600' : line.type.includes('Facture') ? 'text-red-600' : ''}`}>
                           {line.montant !== 0 ? `${line.montant < 0 ? '-' : '+'}${formatCurrency(Math.abs(line.montant))}` : ''}
                         </TableCell>
                         <TableCell className="text-right font-bold">
