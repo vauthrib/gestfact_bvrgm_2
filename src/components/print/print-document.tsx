@@ -41,7 +41,7 @@ const formatDate = (d: string | Date) => {
   return date.toLocaleDateString('fr-FR');
 };
 
-// Couleur rose pâle pour SRGA V2.00
+// Couleur rose pâle pour SRGA V2.01
 const PRIMARY_COLOR = '#db2777'; // pink-600
 const PRIMARY_LIGHT = '#fce7f3'; // pink-100
 const PRIMARY_TEXT = '#be185d'; // pink-700
