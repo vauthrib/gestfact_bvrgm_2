@@ -33,7 +33,7 @@ interface PrintDocumentProps {
   letterheadImage?: string | null;
 }
 
-const formatCurrency = (a: number) => `${a.toLocaleString('fr-MA', { minimumFractionDigits: 2 })} DH`;
+const formatCurrency = (a: number) => `${a.toLocaleString('fr-MA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} DH`;
 
 const formatDate = (d: string | Date) => {
   if (!d) return '';
@@ -103,10 +103,10 @@ const numberToWords = (num: number): string => {
   return result.trim();
 };
 
-// Couleur rose pour SRGA
-const PRIMARY_COLOR = '#db2777'; // pink-600
-const PRIMARY_LIGHT = '#fce7f3'; // pink-100
-const PRIMARY_TEXT = '#be185d'; // pink-700
+// Couleur rose pour V2.02
+const PRIMARY_COLOR = '#16a34a'; // green-600
+const PRIMARY_LIGHT = '#dcfce7'; // green-100
+const PRIMARY_TEXT = '#15803d'; // green-700
 
 const DEFAULT_LAYOUT: PrintLayout = {
   docInfo: { x: 120, y: 10, width: 80, height: 45, visible: true },
@@ -483,7 +483,7 @@ export function PrintDocument({
         <DialogHeader>
           <div className="flex items-center justify-between">
             <DialogTitle>Aperçu - {getTitle()}</DialogTitle>
-            <span className="bg-pink-100 text-pink-700 px-3 py-1 rounded-full text-sm font-mono font-bold">{code}-PRT</span>
+            <span className="bg-green-100 text-pink-700 px-3 py-1 rounded-full text-sm font-mono font-bold">{code}-PRT</span>
           </div>
         </DialogHeader>
 
@@ -649,6 +649,11 @@ export function PrintDocument({
                   )}
                   {documentData.montant !== undefined && (
                     <p className="text-lg font-bold text-pink-700">Montant: {formatCurrency(documentData.montant)}</p>
+                  )}
+                  {(documentData.totalTTC || documentData.montantTTC || documentData.montant) && (
+                    <p className="text-sm italic text-gray-600 mt-3 pt-2 border-t">
+                      Le montant total TTC à payer est de : <strong className="text-pink-700">{numberToWords(documentData.totalTTC || documentData.montantTTC || documentData.montant)}</strong>.
+                    </p>
                   )}
                 </div>
               )}
