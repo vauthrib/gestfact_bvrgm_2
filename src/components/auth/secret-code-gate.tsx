@@ -34,7 +34,7 @@ export function SecretCodeGate({ children }: SecretCodeGateProps) {
         <div className="text-center mb-6">
           <div className="flex items-center justify-center gap-2 mb-2">
             <h1 className="text-3xl font-bold text-pink-600">SRGA</h1>
-            <span className="bg-pink-100 text-pink-700 px-3 py-1 rounded-full text-sm font-mono font-bold border border-pink-300">V2.05</span>
+            <span className="bg-pink-100 text-pink-700 px-3 py-1 rounded-full text-sm font-mono font-bold border border-pink-300">V2.07</span>
           </div>
           <p className="text-sm text-muted-foreground">Gestion de Facturation</p>
         </div>
