@@ -25,7 +25,7 @@ interface PrintLayout {
 interface PrintDocumentProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  documentType: 'BL' | 'FC' | 'FF' | 'RC' | 'RF';
+  documentType: 'BL' | 'FC' | 'FF' | 'RC' | 'RF' | 'AV';
   documentData: any;
   entreprise: any;
   code: string;
@@ -103,7 +103,7 @@ const numberToWords = (num: number): string => {
   return result.trim();
 };
 
-// Couleur rose pour V2.02
+// Couleur rose pâle pour V2.02
 const PRIMARY_COLOR = '#16a34a'; // green-600
 const PRIMARY_LIGHT = '#dcfce7'; // green-100
 const PRIMARY_TEXT = '#15803d'; // green-700
@@ -145,6 +145,7 @@ export function PrintDocument({
       case 'FF': return 'Facture Fournisseur';
       case 'RC': return 'Règlement Client';
       case 'RF': return 'Règlement Fournisseur';
+      case 'AV': return 'Avoir Client';
       default: return 'Document';
     }
   };
@@ -155,8 +156,9 @@ export function PrintDocument({
 
   // Generate HTML for print window
   const generatePrintHTML = () => {
-    const docDate = formatDate(documentData.dateBL || documentData.dateFacture || documentData.dateReglement);
+    const docDate = formatDate(documentData.dateBL || documentData.dateFacture || documentData.dateReglement || documentData.dateAvoir);
     const isBL = documentType === 'BL';
+    const isAV = documentType === 'AV';
     const showPrices = !hidePrices || !isBL;
     
     if (useCustomLayout && printLayout) {
@@ -492,7 +494,7 @@ export function PrintDocument({
             <Button
               variant={useCustomLayout ? "default" : "outline"}
               onClick={() => setUseCustomLayout(!useCustomLayout)}
-              className={useCustomLayout ? "bg-pink-600 hover:bg-pink-700" : ""}
+              className={useCustomLayout ? "bg-green-600 hover:bg-green-700" : ""}
             >
               <Settings className="w-4 h-4 mr-2" />
               {useCustomLayout ? 'Mise en page personnalisée' : 'Mise en page standard'}
@@ -504,14 +506,14 @@ export function PrintDocument({
             <Button
               variant={hidePrices ? "default" : "outline"}
               onClick={() => setHidePrices(!hidePrices)}
-              className={hidePrices ? "bg-pink-600 hover:bg-pink-700" : ""}
+              className={hidePrices ? "bg-green-600 hover:bg-green-700" : ""}
             >
               <EyeOff className="w-4 h-4 mr-2" />
               {hidePrices ? 'Sans prix' : 'Avec prix'}
             </Button>
           )}
           
-          <Button onClick={handlePrint} className="bg-pink-600 hover:bg-pink-700">
+          <Button onClick={handlePrint} className="bg-green-600 hover:bg-green-700">
             <Printer className="w-4 h-4 mr-2" /> Imprimer
           </Button>
         </div>
@@ -589,7 +591,7 @@ export function PrintDocument({
                 }}>
                   <table className="w-full border-collapse">
                     <thead>
-                      <tr className="bg-pink-700 text-white">
+                      <tr className="bg-green-700 text-white">
                         <th className="p-2 text-left text-xs">Désignation</th>
                         <th className="p-2 text-right text-xs w-16">Qté</th>
                         {showPrices && (
@@ -673,7 +675,7 @@ export function PrintDocument({
           ) : (
             /* Standard Layout Mode Preview */
             <>
-              <div className="flex justify-between border-b-2 border-pink-700 pb-4 mb-6 p-6">
+              <div className="flex justify-between border-b-2 border-green-700 pb-4 mb-6 p-6">
                 <div>
                   <h1 className="text-xl font-bold text-pink-700">{entreprise?.nomEntreprise || 'Votre Entreprise'}</h1>
                   <p className="text-sm text-gray-600">
@@ -710,7 +712,7 @@ export function PrintDocument({
               {lignes.length > 0 && (
                 <table className="w-full border-collapse mb-6 mx-6">
                   <thead>
-                    <tr className="bg-pink-700 text-white">
+                    <tr className="bg-green-700 text-white">
                       <th className="p-2 text-left text-xs">Désignation</th>
                       <th className="p-2 text-right text-xs w-20">Qté</th>
                       {showPrices && (

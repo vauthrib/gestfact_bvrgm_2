@@ -416,11 +416,11 @@ export function DashboardView() {
     
     const html = `<!DOCTYPE html><html><head><title>Relevé ${releveTier?.raisonSociale || ''}</title>
       <style>@media print { body { margin: 0; padding: 0; } @page { margin: 1cm; size: A4; } table { page-break-inside: auto; } tr { page-break-inside: avoid; page-break-after: auto; } thead { display: table-header-group; } tfoot { display: table-footer-group; } }
-      body { font-family: Arial, sans-serif; padding: 20px; font-size: 10pt; } h1 { color: #db2777; font-size: 16pt; margin-bottom: 5px; } h2 { color: #be185d; font-size: 12pt; margin-top: 0; }
-      table { width: 100%; border-collapse: collapse; margin-top: 15px; } th { background: #db2777; color: white; padding: 6px 4px; text-align: left; font-size: 9pt; } td { padding: 5px 4px; border-bottom: 1px solid #ddd; font-size: 9pt; }
-      .text-right { text-align: right; } .total-row { font-weight: bold; background: #fce7f3; } .pending { color: #d97706; font-style: italic; } .info { color: #6b7280; font-style: italic; }
-      .footer { margin-top: 20px; font-size: 8pt; color: #666; } .soldes { margin-top: 15px; padding: 10px; background: #fce7f3; border-radius: 6px; } .soldes-row { display: flex; justify-content: space-between; margin: 3px 0; }
-      .negative { color: #dc2626; } .positive { color: #db2777; } .amount-words { margin-top: 20px; padding: 15px; background: #f9f9f9; border: 1px solid #ddd; border-radius: 6px; font-weight: bold; }</style></head>
+      body { font-family: Arial, sans-serif; padding: 20px; font-size: 10pt; } h1 { color: #16a34a; font-size: 16pt; margin-bottom: 5px; } h2 { color: #15803d; font-size: 12pt; margin-top: 0; }
+      table { width: 100%; border-collapse: collapse; margin-top: 15px; } th { background: #16a34a; color: white; padding: 6px 4px; text-align: left; font-size: 9pt; } td { padding: 5px 4px; border-bottom: 1px solid #ddd; font-size: 9pt; }
+      .text-right { text-align: right; } .total-row { font-weight: bold; background: #dcfce7; } .pending { color: #d97706; font-style: italic; } .info { color: #6b7280; font-style: italic; }
+      .footer { margin-top: 20px; font-size: 8pt; color: #666; } .soldes { margin-top: 15px; padding: 10px; background: #dcfce7; border-radius: 6px; } .soldes-row { display: flex; justify-content: space-between; margin: 3px 0; }
+      .negative { color: #dc2626; } .positive { color: #16a34a; } .amount-words { margin-top: 20px; padding: 15px; background: #f9f9f9; border: 1px solid #ddd; border-radius: 6px; font-weight: bold; }</style></head>
       <body><h1>Relevé de compte</h1><h2>${releveTier?.raisonSociale || ''}</h2><p>Période: ${releveForm.dateFrom || 'Début'} - ${releveForm.dateTo || 'Fin'}</p>
       <table><thead><tr><th>Date</th><th>Type</th><th>N°</th><th class="text-right">Montant TTC</th><th class="text-right">Montant</th><th class="text-right">Solde</th></tr></thead>
       <tbody>${releveData.map(l => `<tr class="${l.isInfo ? 'info' : (!l.isValidated ? 'pending' : '')}"><td>${l.dateStr}</td><td>${l.type}</td><td>${l.numero}</td>
@@ -451,7 +451,7 @@ export function DashboardView() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-pink-700">Tableau de bord</h1>
-          <p className="text-muted-foreground">Bienvenue sur SRGA V2.04</p>
+          <p className="text-muted-foreground">Bienvenue sur SRGA V2.05</p>
         </div>
         <div className="flex items-center gap-2">
           <span className="bg-pink-100 text-pink-700 px-3 py-1 rounded-full text-sm font-mono font-bold">TDB01</span>
@@ -461,34 +461,34 @@ export function DashboardView() {
         </div>
       </div>
 
-      <div className="bg-pink-50 rounded-lg border border-pink-200 overflow-hidden">
+      <div className="bg-green-50 rounded-lg border border-green-200 overflow-hidden">
         <Table>
           <TableHeader>
             <TableRow className="bg-pink-100 hover:bg-pink-100">
-              <TableHead className="font-bold text-pink-700 border-r border-pink-200">Libellé</TableHead>
-              <TableHead className="text-center font-bold text-pink-700 bg-pink-200">Ce mois</TableHead>
+              <TableHead className="font-bold text-pink-700 border-r border-green-200">Libellé</TableHead>
+              <TableHead className="text-center font-bold text-pink-700 bg-green-200">Ce mois</TableHead>
               <TableHead className="text-center font-bold text-pink-700">m-1</TableHead>
               <TableHead className="text-center font-bold text-pink-700">m-2</TableHead>
               <TableHead className="text-center font-bold text-pink-700">m-3</TableHead>
               <TableHead className="text-center font-bold text-pink-700">m-4</TableHead>
               <TableHead className="text-center font-bold text-pink-700">m-5</TableHead>
               <TableHead className="text-center font-bold text-pink-700">m-6</TableHead>
-              <TableHead className="text-center font-bold text-pink-700 bg-pink-300">Cumul Année</TableHead>
+              <TableHead className="text-center font-bold text-pink-700 bg-green-300">Cumul Année</TableHead>
             </TableRow>
-            <TableRow className="bg-pink-50 hover:bg-pink-50">
-              <TableHead className="border-r border-pink-200"></TableHead>
+            <TableRow className="bg-green-50 hover:bg-green-50">
+              <TableHead className="border-r border-green-200"></TableHead>
               {[0, 1, 2, 3, 4, 5, 6].map((m) => (
                 <TableHead key={m} className={`text-center text-xs text-pink-600 ${m === 0 ? 'bg-pink-100' : ''}`}>
                   {getMonthName(m)}
                 </TableHead>
               ))}
-              <TableHead className="text-center text-xs text-pink-600 bg-pink-200">{new Date().getFullYear()}</TableHead>
+              <TableHead className="text-center text-xs text-pink-600 bg-green-200">{new Date().getFullYear()}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {tableRows.map((row, idx) => (
               <TableRow key={idx} className="hover:bg-pink-100/50">
-                <TableCell className={`font-medium text-pink-800 border-r border-pink-200 ${row.isTTC ? 'text-xs' : ''}`}>{row.label}</TableCell>
+                <TableCell className={`font-medium text-green-800 border-r border-green-200 ${row.isTTC ? 'text-xs' : ''}`}>{row.label}</TableCell>
                 {[0, 1, 2, 3, 4, 5, 6].map((m) => {
                   const key = `m${m}` as keyof MonthlyData;
                   return (
@@ -497,7 +497,7 @@ export function DashboardView() {
                     </TableCell>
                   );
                 })}
-                <TableCell className={`text-right font-mono bg-pink-200 font-bold ${row.isTTC ? 'text-xs' : ''}`}>
+                <TableCell className={`text-right font-mono bg-green-200 font-bold ${row.isTTC ? 'text-xs' : ''}`}>
                   {formatCurrency(row.yearly)}
                 </TableCell>
               </TableRow>
@@ -552,7 +552,7 @@ export function DashboardView() {
           <div className="py-4">
             {releveData.length === 0 ? (<div className="text-center text-muted-foreground py-8">Aucune donnée sur la période</div>) : (
               <>
-                <div className="mb-4 p-4 bg-pink-50 rounded-lg border border-pink-200">
+                <div className="mb-4 p-4 bg-green-50 rounded-lg border border-green-200">
                   <span className="text-sm text-pink-600 font-medium">Solde Final:</span>
                   <div className="text-xl font-bold text-pink-700">{formatCurrency(Math.abs(finalSolde))}
                     <span className="text-sm ml-2">{finalSolde >= 0 ? (isClient ? 'Créditeur' : 'Débiteur') : (isClient ? 'Débiteur' : 'Créditeur')}</span>
@@ -576,13 +576,13 @@ export function DashboardView() {
                         <TableCell className={line.isInfo ? 'text-gray-500 italic' : (!line.isValidated ? 'text-yellow-700 italic' : '')}>{line.type}</TableCell>
                         <TableCell>{line.numero}</TableCell>
                         <TableCell className="text-right">{line.montantTTC > 0 ? formatCurrency(line.montantTTC) : ''}</TableCell>
-                        <TableCell className={`text-right font-medium ${line.type.includes('Règlement') ? 'text-green-600' : line.type.includes('Facture') ? 'text-red-600' : ''}`}>
+                        <TableCell className={`text-right font-medium ${line.type.includes('Règlement') ? 'text-pink-600' : line.type.includes('Facture') ? 'text-red-600' : ''}`}>
                           {line.montant !== 0 ? `${line.montant < 0 ? '-' : '+'}${formatCurrency(Math.abs(line.montant))}` : ''}
                         </TableCell>
                         <TableCell className="text-right font-bold">{formatCurrency(Math.abs(line.solde))}<span className="text-xs ml-1">{line.solde >= 0 ? (isClient ? '(C)' : '(D)') : (isClient ? '(D)' : '(C)')}</span></TableCell>
                       </TableRow>
                     ))}
-                    <TableRow className="bg-pink-50 font-bold"><TableCell colSpan={3}>TOTAL</TableCell><TableCell></TableCell><TableCell className="text-right">{formatCurrency(Math.abs(releveData.reduce((s, l) => s + l.montant, 0)))}</TableCell><TableCell></TableCell></TableRow>
+                    <TableRow className="bg-green-50 font-bold"><TableCell colSpan={3}>TOTAL</TableCell><TableCell></TableCell><TableCell className="text-right">{formatCurrency(Math.abs(releveData.reduce((s, l) => s + l.montant, 0)))}</TableCell><TableCell></TableCell></TableRow>
                   </TableBody>
                 </Table>
               </>
