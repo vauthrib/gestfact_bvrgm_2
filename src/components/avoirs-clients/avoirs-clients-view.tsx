@@ -17,7 +17,7 @@ interface LigneAvoir { id?: string; articleId?: string; designation: string; qua
 interface AvoirClient { id: string; numero: string; dateAvoir: string; clientId: string; factureId: string | null; motif: string | null; statut: string; notes: string | null; infoLibre: string | null; totalHT: number; totalTVA: number; totalTTC: number; client: { raisonSociale: string; adresse?: string; ville?: string; ice?: string }; facture?: { numero: string } | null; lignes?: LigneAvoir[]; }
 interface Tiers { id: string; code: string; raisonSociale: string; type: string; }
 interface Article { id: string; code: string; designation: string; prixUnitaire: number; tauxTVA: number; }
-interface Facture { id: string; numero: string; clientId: string; totalHT: number; totalTTC: number; statut: string; client: { raisonSociale: string }; lignes: { designation: string; quantite: number; prixUnitaire: number; tauxTVA: number; totalHT: number; articleId?: string }[]; }
+interface Facture { id: string; numero: string; clientId: string; totalHT: number; totalTTC: number; statut?: string; client?: { raisonSociale?: string }; lignes?: { designation: string; quantite: number; prixUnitaire: number; tauxTVA: number; totalHT: number; articleId?: string }[]; }
 interface Parametres { 
   id?: string;
   nomEntreprise: string; 
@@ -99,8 +99,8 @@ export function AvoirsClientsView() {
   const fetchAvoirs = async () => { try { const res = await fetch('/api/avoirs-clients'); const d = await res.json(); setAvoirs(Array.isArray(d) ? d : []); } catch (e) { console.error(e); } finally { setLoading(false); } };
   const fetchClients = async () => { try { const res = await fetch('/api/tiers'); const d = await res.json(); setClients((Array.isArray(d) ? d : []).filter((t: any) => t.type === 'CLIENT')); } catch (e) { } };
   const fetchArticles = async () => { try { const res = await fetch('/api/articles'); const d = await res.json(); setArticles(Array.isArray(d) ? d : []); } catch (e) { } };
-  const fetchFactures = async () => { try { const res = await fetch('/api/factures-clients'); const d = await res.json(); setFactures(Array.isArray(d) ? d : []); } catch (e) { } };
-  const fetchParametres = async () => { try { const res = await fetch('/api/parametres'); const d = await res.json(); setParametres(d); } catch (e) { } };
+  const fetchFactures = async () => { try { const res = await fetch('/api/factures-clients'); const d = await res.json(); setFactures(Array.isArray(d) ? d : []); } catch (e) { console.error('Erreur fetchFactures:', e); setFactures([]); } };
+  const fetchParametres = async () => { try { const res = await fetch('/api/parametres'); const d = await res.json(); setParametres(d || null); } catch (e) { console.error('Erreur fetchParametres:', e); setParametres(null); } };
 
   const sortedClients = [...clients].sort((a, b) => a.raisonSociale.localeCompare(b.raisonSociale));
   const sortedArticles = [...articles].sort((a, b) => a.designation.localeCompare(b.designation));
@@ -130,7 +130,7 @@ export function AvoirsClientsView() {
   const handleSelectFacture = (factureId: string) => {
     if (!factureId) { setLignes([{ designation: '', quantite: '1', prixUnitaire: '0', tauxTVA: '20', totalHT: 0 }]); setFormData(prev => ({ ...prev, factureId: '', clientId: '' })); return; }
     const facture = factures.find(f => f.id === factureId);
-    if (facture) {
+    if (facture && facture.lignes && facture.lignes.length > 0) {
       setFormData(prev => ({ ...prev, factureId, clientId: facture.clientId }));
       setLignes(facture.lignes.map(l => ({
         articleId: l.articleId,
@@ -263,11 +263,11 @@ export function AvoirsClientsView() {
   return (
     <div className="p-6 space-y-6 w-full">
       <div className="flex items-center justify-between">
-        <div><h1 className="text-3xl font-bold text-pink-700">Avoirs Clients</h1><p className="text-muted-foreground">Gérez vos avoirs</p></div>
+        <div><h1 className="text-3xl font-bold text-green-700">Avoirs Clients</h1><p className="text-muted-foreground">Gérez vos avoirs</p></div>
         <div className="flex items-center gap-2">
-          <span className="bg-pink-100 text-pink-700 px-3 py-1 rounded-full text-sm font-mono font-bold">NAC01</span>
+          <span className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm font-mono font-bold">NAC01</span>
           <Button variant="outline" onClick={() => setExportOpen(true)}><Download className="w-4 h-4 mr-2" />Export</Button>
-          <Button className="bg-pink-600 hover:bg-pink-700" onClick={() => { resetForm(); setDialogOpen(true); }}><Plus className="w-4 h-4 mr-2" />Nouveau</Button>
+          <Button className="bg-green-600 hover:bg-green-700" onClick={() => { resetForm(); setDialogOpen(true); }}><Plus className="w-4 h-4 mr-2" />Nouveau</Button>
         </div>
       </div>
       <Card>
@@ -309,9 +309,9 @@ export function AvoirsClientsView() {
                 <TableCell>{a.facture?.numero || '-'}</TableCell>
                 <TableCell>{formatCurrency(a.totalHT)}</TableCell>
                 <TableCell>{formatCurrency(a.totalTTC)}</TableCell>
-                <TableCell><span className={`px-2 py-1 rounded text-xs ${a.statut === 'VALIDEE' ? 'bg-pink-100 text-pink-800' : 'bg-yellow-100 text-yellow-800'}`}>{a.statut === 'VALIDEE' ? 'Validé' : 'Brouillon'}</span></TableCell>
+                <TableCell><span className={`px-2 py-1 rounded text-xs ${a.statut === 'VALIDEE' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>{a.statut === 'VALIDEE' ? 'Validé' : 'Brouillon'}</span></TableCell>
                 <TableCell><div className="flex gap-1 flex-wrap">
-                  {a.statut === 'BROUILLON' && <Button size="sm" variant="outline" className="text-pink-600" onClick={() => handleValidate(a.id)} title="Valider"><CheckCircle className="h-4 w-4" /></Button>}
+                  {a.statut === 'BROUILLON' && <Button size="sm" variant="outline" className="text-green-600" onClick={() => handleValidate(a.id)} title="Valider"><CheckCircle className="h-4 w-4" /></Button>}
                   <Button size="sm" variant="outline" onClick={() => handlePrint(a)} title="Imprimer"><Printer className="h-4 w-4" /></Button>
                   <Button size="sm" variant="outline" onClick={() => openEditDialog(a)} title="Modifier"><Pencil className="h-4 w-4" /></Button>
                   <Button size="sm" variant="destructive" onClick={() => handleDelete(a.id)} disabled={a.statut === 'VALIDEE'} title="Supprimer"><Trash2 className="h-4 w-4" /></Button>
@@ -327,7 +327,7 @@ export function AvoirsClientsView() {
           <DialogHeader>
             <div className="flex items-center justify-between">
               <DialogTitle>{editing ? 'Modifier' : 'Nouveau'} Avoir</DialogTitle>
-              <span className="bg-pink-100 text-pink-700 px-3 py-1 rounded-full text-sm font-mono font-bold">NAC01-DLG</span>
+              <span className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm font-mono font-bold">NAC01-DLG</span>
             </div>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -336,7 +336,7 @@ export function AvoirsClientsView() {
                 <Label>N° Avoir</Label>
                 {editing ? <Input value={formData.numero} disabled className="bg-gray-100" /> : (
                   <div className="space-y-1">
-                    <Input value={getProchainNumero()} disabled className="bg-gray-100 font-bold text-pink-700" />
+                    <Input value={getProchainNumero()} disabled className="bg-gray-100 font-bold text-green-700" />
                     <span className="text-xs text-muted-foreground">(Numéro automatique)</span>
                   </div>
                 )}
@@ -347,8 +347,8 @@ export function AvoirsClientsView() {
                   <SelectTrigger><SelectValue placeholder="Sélectionner (optionnel)" /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="">-- Aucune --</SelectItem>
-                    {factures.filter(f => f.statut === 'VALIDEE').map(f => (
-                      <SelectItem key={f.id} value={f.id}>{f.numero} - {f.client?.raisonSociale || 'N/A'} ({formatCurrency(f.totalTTC)})</SelectItem>
+                    {(factures || []).filter(f => f?.statut === 'VALIDEE').map(f => (
+                      <SelectItem key={f.id} value={f.id}>{f.numero} - {f?.client?.raisonSociale || 'N/A'} ({formatCurrency(f?.totalTTC || 0)})</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -397,7 +397,7 @@ export function AvoirsClientsView() {
             </div>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => { setDialogOpen(false); resetForm(); }}>Annuler</Button>
-              <Button type="submit" className="bg-pink-600 hover:bg-pink-700">{editing ? 'Modifier' : 'Créer'}</Button>
+              <Button type="submit" className="bg-green-600 hover:bg-green-700">{editing ? 'Modifier' : 'Créer'}</Button>
             </DialogFooter>
           </form>
         </DialogContent>
@@ -413,7 +413,7 @@ export function AvoirsClientsView() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setCodeDialogOpen(false)}>Annuler</Button>
-            <Button className="bg-pink-600 hover:bg-pink-700" onClick={handleCodeSubmit}>Confirmer</Button>
+            <Button className="bg-green-600 hover:bg-green-700" onClick={handleCodeSubmit}>Confirmer</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
