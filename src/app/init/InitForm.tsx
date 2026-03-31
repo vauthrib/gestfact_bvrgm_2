@@ -47,7 +47,7 @@ export default function InitForm() {
 
   if (success) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-blue-200">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-pink-50 to-pink-200">
         <div className="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md border-2 border-green-300">
           <div className="text-center">
             <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
@@ -60,17 +60,17 @@ export default function InitForm() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-blue-200">
-      <div className="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md border-2 border-blue-300">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-pink-50 to-pink-200">
+      <div className="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md border-2 border-pink-300">
         <div className="text-center mb-6">
           <div className="flex items-center justify-center gap-2 mb-2">
-            <h1 className="text-3xl font-bold text-blue-600">SRGA</h1>
-            <span className="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-sm font-mono font-bold border border-blue-300">V2.21</span>
+            <h1 className="text-3xl font-bold text-pink-600">SRGA</h1>
+            <span className="bg-pink-100 text-pink-600 px-3 py-1 rounded-full text-sm font-mono font-bold border border-pink-300">V2.35</span>
           </div>
           <p className="text-lg font-medium text-foreground">Première initialisation</p>
           <p className="text-sm text-muted-foreground">Créez le compte administrateur</p>
         </div>
-        
+
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="name">Nom</Label>
@@ -94,7 +94,7 @@ export default function InitForm() {
               required
             />
           </div>
-          
+
           <div className="space-y-2">
             <Label htmlFor="password">Mot de passe</Label>
             <Input
@@ -116,9 +116,9 @@ export default function InitForm() {
             </div>
           )}
 
-          <Button 
-            type="submit" 
-            className="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold"
+          <Button
+            type="submit"
+            className="w-full bg-pink-500 hover:bg-pink-600 text-white font-bold"
             disabled={loading}
           >
             {loading ? 'Création en cours...' : 'Créer le compte administrateur'}
