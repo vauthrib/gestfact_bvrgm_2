@@ -979,7 +979,7 @@ export function DashboardView() {
                       let typeLabel = '';
                       if (line.type === 'facture') { bgClass = 'bg-green-50'; typeLabel = 'Facture'; }
                       else if (line.type === 'avoir') { bgClass = 'bg-yellow-50'; typeLabel = '  └ Avoir'; }
-                      else if (line.type === 'reglement') { bgClass = 'bg-blue-50'; typeLabel = '  └ Règlement'; }
+                      else if (line.type === 'reglement') { bgClass = 'bg-green-50'; typeLabel = '  └ Règlement'; }
                       else if (line.type === 'reste') { bgClass = 'bg-red-50 font-bold'; typeLabel = '  └ Reste à payer'; }
                       
                       return (

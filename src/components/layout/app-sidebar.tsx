@@ -4,8 +4,9 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import {
   LayoutDashboard, Users, Package, FileText, CreditCard,
-  Truck, Settings, ChevronLeft, ChevronRight, Receipt, Undo2
+  Truck, Settings, ChevronLeft, ChevronRight, Receipt, Undo2, LogOut, User
 } from 'lucide-react';
+import { hasPermission, Permission } from '@/lib/permissions';
 
 export type PageView =
   | 'dashboard'
@@ -19,27 +20,51 @@ export type PageView =
   | 'reglements-fournisseurs'
   | 'parametres';
 
+interface User {
+  id: string;
+  email: string;
+  name?: string | null;
+  role: string;
+  permissions: Permission[];
+}
+
 interface AppSidebarProps {
   currentView: PageView;
   onViewChange: (view: PageView) => void;
   collapsed: boolean;
   onToggle: () => void;
+  user: User;
+  onLogout: () => void;
 }
 
-const menuItems: { id: PageView; label: string; icon: React.ReactNode; separatorAfter?: boolean }[] = [
-  { id: 'dashboard', label: 'Tableau de bord', icon: <LayoutDashboard className="w-5 h-5" /> },
-  { id: 'tiers', label: 'Tiers', icon: <Users className="w-5 h-5" /> },
-  { id: 'articles', label: 'Articles', icon: <Package className="w-5 h-5" /> },
-  { id: 'bons-livraison', label: 'Bons de Livraison', icon: <Truck className="w-5 h-5" /> },
-  { id: 'factures-clients', label: 'Factures Clients', icon: <FileText className="w-5 h-5" /> },
-  { id: 'avoirs-clients', label: 'Avoirs Clients', icon: <Undo2 className="w-5 h-5" /> },
-  { id: 'reglements-clients', label: 'Règlements Clients', icon: <CreditCard className="w-5 h-5" />, separatorAfter: true },
-  { id: 'factures-fournisseurs', label: 'Factures Fourn.', icon: <Receipt className="w-5 h-5" /> },
-  { id: 'reglements-fournisseurs', label: 'Règlements Fourn.', icon: <CreditCard className="w-5 h-5" />, separatorAfter: true },
-  { id: 'parametres', label: 'Paramètres', icon: <Settings className="w-5 h-5" /> },
+const allMenuItems: { id: PageView; label: string; icon: React.ReactNode; separatorAfter?: boolean; permission: Permission }[] = [
+  { id: 'dashboard', label: 'Tableau de bord', icon: <LayoutDashboard className="w-5 h-5" />, permission: 'dashboard.view' },
+  { id: 'tiers', label: 'Tiers', icon: <Users className="w-5 h-5" />, permission: 'tiers.view' },
+  { id: 'articles', label: 'Articles', icon: <Package className="w-5 h-5" />, permission: 'articles.view' },
+  { id: 'bons-livraison', label: 'Bons de Livraison', icon: <Truck className="w-5 h-5" />, permission: 'bl.view' },
+  { id: 'factures-clients', label: 'Factures Clients', icon: <FileText className="w-5 h-5" />, permission: 'factures.view' },
+  { id: 'avoirs-clients', label: 'Avoirs Clients', icon: <Undo2 className="w-5 h-5" />, permission: 'avoirs.view' },
+  { id: 'reglements-clients', label: 'Règlements Clients', icon: <CreditCard className="w-5 h-5" />, permission: 'reglements.view', separatorAfter: true },
+  { id: 'factures-fournisseurs', label: 'Factures Fourn.', icon: <Receipt className="w-5 h-5" />, permission: 'fournisseurs.view' },
+  { id: 'reglements-fournisseurs', label: 'Règlements Fourn.', icon: <CreditCard className="w-5 h-5" />, permission: 'reglements-fourn.view', separatorAfter: true },
+  { id: 'parametres', label: 'Paramètres', icon: <Settings className="w-5 h-5" />, permission: 'parametres.view' },
 ];
 
-export function AppSidebar({ currentView, onViewChange, collapsed, onToggle }: AppSidebarProps) {
+export function AppSidebar({ currentView, onViewChange, collapsed, onToggle, user, onLogout }: AppSidebarProps) {
+  // Filtrer les menus selon les permissions
+  const menuItems = allMenuItems.filter(item => 
+    hasPermission(user.role, user.permissions, item.permission)
+  );
+
+  // Ajouter separatorAfter au dernier item de chaque groupe si nécessaire
+  const processedMenuItems = menuItems.map((item, index) => {
+    // Ajouter separator après règlements clients et règlements fournisseurs
+    const needsSeparator = 
+      item.id === 'reglements-clients' || 
+      item.id === 'reglements-fournisseurs';
+    return { ...item, separatorAfter: needsSeparator };
+  });
+
   return (
     <div
       className={cn(
@@ -50,21 +75,22 @@ export function AppSidebar({ currentView, onViewChange, collapsed, onToggle }: A
       <div className="p-4 border-b border-sidebar-border flex items-center justify-between">
         {!collapsed && (
           <span className="font-bold text-lg">
-            <span className="text-pink-700">SRGA</span> <span className="bg-pink-400 text-white px-2 py-0.5 rounded text-xs font-bold">V2.18</span>
+            SRGA <span className="bg-green-600 text-white px-2 py-0.5 rounded text-xs font-bold">V2.30</span>
           </span>
         )}
         <Button variant="ghost" size="sm" onClick={onToggle}>
           {collapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
         </Button>
       </div>
+      
       <nav className="flex-1 p-2 space-y-1">
-        {menuItems.map((item, index) => (
+        {processedMenuItems.map((item) => (
           <div key={item.id}>
             <Button
               variant={currentView === item.id ? 'secondary' : 'ghost'}
               className={cn(
                 'w-full justify-start gap-3',
-                currentView === item.id && 'bg-pink-100 text-pink-900 hover:bg-pink-200'
+                currentView === item.id && 'bg-green-100 text-green-900 hover:bg-green-200'
               )}
               onClick={() => onViewChange(item.id)}
             >
@@ -77,6 +103,38 @@ export function AppSidebar({ currentView, onViewChange, collapsed, onToggle }: A
           </div>
         ))}
       </nav>
+
+      {/* User info and logout */}
+      <div className="p-2 border-t border-sidebar-border">
+        {!collapsed ? (
+          <div className="space-y-2">
+            <div className="flex items-center gap-2 px-2 py-1 text-sm text-muted-foreground">
+              <User className="w-4 h-4" />
+              <div className="flex-1 truncate">
+                <div className="font-medium text-foreground truncate">{user.name || user.email}</div>
+                <div className="text-xs">{user.role === 'ADMIN' ? 'Administrateur' : 'Utilisateur'}</div>
+              </div>
+            </div>
+            <Button 
+              variant="ghost" 
+              className="w-full justify-start gap-3 text-red-600 hover:text-red-700 hover:bg-red-50"
+              onClick={onLogout}
+            >
+              <LogOut className="w-5 h-5" />
+              <span>Déconnexion</span>
+            </Button>
+          </div>
+        ) : (
+          <Button 
+            variant="ghost" 
+            size="sm"
+            className="w-full text-red-600 hover:text-red-700 hover:bg-red-50"
+            onClick={onLogout}
+          >
+            <LogOut className="w-5 h-5" />
+          </Button>
+        )}
+      </div>
     </div>
   );
 }
