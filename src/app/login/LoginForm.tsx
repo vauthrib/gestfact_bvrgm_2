@@ -41,12 +41,12 @@ export default function LoginForm() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-green-200">
-      <div className="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md border-2 border-green-300">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-pink-50 to-pink-200">
+      <div className="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md border-2 border-pink-300">
         <div className="text-center mb-6">
           <div className="flex items-center justify-center gap-2 mb-2">
-            <h1 className="text-3xl font-bold text-green-700">SRGA</h1>
-            <span className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm font-mono font-bold border border-green-300">V2.30</span>
+            <h1 className="text-3xl font-bold text-pink-600">SRGA</h1>
+            <span className="bg-pink-100 text-pink-600 px-3 py-1 rounded-full text-sm font-mono font-bold border border-pink-300">V2.31</span>
           </div>
           <p className="text-sm text-muted-foreground">Gestion de Facturation</p>
         </div>
@@ -87,7 +87,7 @@ export default function LoginForm() {
 
           <Button 
             type="submit" 
-            className="w-full bg-green-600 hover:bg-green-700 text-white font-bold"
+            className="w-full bg-pink-500 hover:bg-pink-600 text-white font-bold"
             disabled={loading}
           >
             {loading ? 'Connexion...' : 'Se connecter'}

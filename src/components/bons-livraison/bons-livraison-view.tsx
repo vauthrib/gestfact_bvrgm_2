@@ -351,7 +351,7 @@ export function BonsLivraisonView() {
                 <TableCell><span className={`px-2 py-1 rounded text-xs ${b.statut === 'VALIDEE' ? 'bg-pink-100 text-pink-800' : 'bg-yellow-100 text-yellow-800'}`}>{b.statut === 'VALIDEE' ? 'Validé' : 'Brouillon'}</span></TableCell>
                 <TableCell>
                   {b.facture ? (
-                    <span className="px-2 py-1 rounded text-xs bg-green-100 text-green-800 font-medium">
+                    <span className="px-2 py-1 rounded text-xs bg-pink-100 text-pink-800 font-medium">
                       ✓ {b.facture.numero}
                     </span>
                   ) : (

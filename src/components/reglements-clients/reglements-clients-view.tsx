@@ -735,7 +735,7 @@ export function ReglementsClientsView() {
                   </Select>
                 </div>
                 {selectedFacture && resteAPayer !== null && (
-                  <div className={`p-4 rounded-lg border ${resteAPayer > 0 ? 'bg-yellow-50 border-yellow-200' : 'bg-pink-50 border-green-200'}`}>
+                  <div className={`p-4 rounded-lg border ${resteAPayer > 0 ? 'bg-yellow-50 border-yellow-200' : 'bg-pink-50 border-pink-200'}`}>
                     <div className="grid grid-cols-3 gap-4 text-sm">
                       <div><span className="text-muted-foreground">Total Facture:</span><div className="font-bold text-lg">{formatCurrency(selectedFacture.totalTTC)}</div></div>
                       <div><span className="text-muted-foreground">Déjà réglé:</span><div className="font-bold text-lg">{formatCurrency(selectedFacture.totalTTC - resteAPayer)}</div></div>
