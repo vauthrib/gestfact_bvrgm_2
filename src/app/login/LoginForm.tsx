@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import { signIn } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -13,7 +12,6 @@ export default function LoginForm() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,8 +31,8 @@ export default function LoginForm() {
         setError('Email ou mot de passe incorrect');
         setLoading(false);
       } else if (result?.ok) {
-        router.push('/');
-        router.refresh();
+        // Force un rechargement complet pour que le middleware lise le cookie de session
+        window.location.href = '/';
       } else {
         // Unknown state
         setError('Erreur de connexion');
