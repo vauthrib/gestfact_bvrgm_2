@@ -1,39 +1,19 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { signIn } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { AlertCircle, Loader2 } from 'lucide-react';
+import { AlertCircle } from 'lucide-react';
 
 export default function LoginForm() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [checkingInit, setCheckingInit] = useState(true);
   const router = useRouter();
-
-  // Check if initialization is needed
-  useEffect(() => {
-    async function checkInit() {
-      try {
-        const res = await fetch('/api/users/init');
-        const data = await res.json();
-        if (data.needsInit) {
-          router.push('/init');
-        }
-      } catch (e) {
-        // If error, assume we need init
-        router.push('/init');
-      } finally {
-        setCheckingInit(false);
-      }
-    }
-    checkInit();
-  }, [router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -60,21 +40,13 @@ export default function LoginForm() {
     }
   };
 
-  if (checkingInit) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-pink-50 to-pink-200">
-        <Loader2 className="w-8 h-8 animate-spin text-pink-500" />
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-pink-50 to-pink-200">
       <div className="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md border-2 border-pink-300">
         <div className="text-center mb-6">
           <div className="flex items-center justify-center gap-2 mb-2">
             <h1 className="text-3xl font-bold text-pink-600">SRGA</h1>
-            <span className="bg-pink-100 text-pink-600 px-3 py-1 rounded-full text-sm font-mono font-bold border border-pink-300">V2.35</span>
+            <span className="bg-pink-100 text-pink-600 px-3 py-1 rounded-full text-sm font-mono font-bold border border-pink-300">V2.41</span>
           </div>
           <p className="text-sm text-muted-foreground">Gestion de Facturation</p>
         </div>
