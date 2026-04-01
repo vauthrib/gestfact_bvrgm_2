@@ -11,6 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Plus, Pencil, Trash2, Search, CheckCircle, Download, ArrowUp, ArrowDown, ArrowUpDown } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ExportDialog } from '@/components/import-export/export-dialog';
+import { PermissionGate } from '@/components/auth/permission-gate';
 
 interface FactureFournisseur {
   id: string; numeroFacture: string; fournisseurId: string; dateFacture: string;
@@ -171,8 +172,8 @@ export function FacturesFournisseursView() {
         <div><h1 className="text-3xl font-bold text-pink-700">Factures Fournisseurs</h1><p className="text-muted-foreground">Gérez vos factures fournisseurs</p></div>
         <div className="flex items-center gap-2">
           <span className="bg-pink-100 text-pink-700 px-3 py-1 rounded-full text-sm font-mono font-bold">NFF01</span>
-          <Button variant="outline" onClick={() => setExportOpen(true)}><Download className="w-4 h-4 mr-2" />Export</Button>
-          <Button className="bg-pink-600 hover:bg-pink-700" onClick={() => { resetForm(); setDialogOpen(true); }}><Plus className="w-4 h-4 mr-2" />Nouveau</Button>
+          <PermissionGate permission="fournisseurs.create"><Button variant="outline" onClick={() => setExportOpen(true)}><Download className="w-4 h-4 mr-2" />Export</Button></PermissionGate>
+          <PermissionGate permission="fournisseurs.create"><Button className="bg-pink-600 hover:bg-pink-700" onClick={() => { resetForm(); setDialogOpen(true); }}><Plus className="w-4 h-4 mr-2" />Nouveau</Button></PermissionGate>
         </div>
       </div>
       <Card>
@@ -218,9 +219,9 @@ export function FacturesFournisseursView() {
                 <TableCell>{formatCurrency(f.montantTTC)}</TableCell>
                 <TableCell><span className={`px-2 py-1 rounded text-xs ${f.statut === 'VALIDEE' ? 'bg-pink-100 text-pink-800' : 'bg-yellow-100 text-yellow-800'}`}>{f.statut === 'VALIDEE' ? 'Validée' : 'Enregistrée'}</span></TableCell>
                 <TableCell><div className="flex gap-2">
-                  {f.statut === 'ENREGISTREE' && <Button size="sm" variant="outline" className="text-pink-600" onClick={() => handleValidate(f.id)}><CheckCircle className="h-4 w-4" /></Button>}
-                  <Button size="sm" variant="outline" onClick={() => openEditDialog(f)}><Pencil className="h-4 w-4" /></Button>
-                  <Button size="sm" variant="destructive" onClick={() => handleDelete(f.id)}><Trash2 className="h-4 w-4" /></Button>
+                  {f.statut === 'ENREGISTREE' && <PermissionGate permission="fournisseurs.validate"><Button size="sm" variant="outline" className="text-pink-600" onClick={() => handleValidate(f.id)}><CheckCircle className="h-4 w-4" /></Button></PermissionGate>}
+                  <PermissionGate permission="fournisseurs.edit"><Button size="sm" variant="outline" onClick={() => openEditDialog(f)}><Pencil className="h-4 w-4" /></Button></PermissionGate>
+                  <PermissionGate permission="fournisseurs.edit"><Button size="sm" variant="destructive" onClick={() => handleDelete(f.id)}><Trash2 className="h-4 w-4" /></Button></PermissionGate>
                 </div></TableCell>
               </TableRow>))}</TableBody>
             </Table>

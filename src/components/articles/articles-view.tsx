@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Plus, Pencil, Trash2, Search, Package, Download, ArrowUp, ArrowDown, ArrowUpDown } from 'lucide-react';
 import { ExportDialog } from '@/components/import-export/export-dialog';
+import { PermissionGate } from '@/components/auth/permission-gate';
 
 interface Article {
   id: string; code: string; designation: string; prixUnitaire: number;
@@ -129,8 +130,12 @@ export function ArticlesView() {
         <div><h1 className="text-3xl font-bold text-pink-700">Articles</h1><p className="text-muted-foreground">Gérez votre catalogue</p></div>
         <div className="flex items-center gap-2">
           <span className="bg-pink-100 text-pink-700 px-3 py-1 rounded-full text-sm font-mono font-bold">ART01</span>
-          <Button variant="outline" onClick={() => setExportOpen(true)}><Download className="w-4 h-4 mr-2" />Export</Button>
-          <Button className="bg-pink-600 hover:bg-pink-700" onClick={() => { resetForm(); generateCode(); setDialogOpen(true); }}><Plus className="w-4 h-4 mr-2" />Nouveau</Button>
+          <PermissionGate permission="articles.create">
+            <Button variant="outline" onClick={() => setExportOpen(true)}><Download className="w-4 h-4 mr-2" />Export</Button>
+          </PermissionGate>
+          <PermissionGate permission="articles.create">
+            <Button className="bg-pink-600 hover:bg-pink-700" onClick={() => { resetForm(); generateCode(); setDialogOpen(true); }}><Plus className="w-4 h-4 mr-2" />Nouveau</Button>
+          </PermissionGate>
         </div>
       </div>
       <Card>
@@ -158,8 +163,12 @@ export function ArticlesView() {
                 <TableCell>{a.tauxTVA}%</TableCell>
                 <TableCell><span className={`px-2 py-1 rounded text-xs ${a.actif ? 'bg-pink-100 text-pink-800' : 'bg-gray-100 text-gray-800'}`}>{a.actif ? 'Actif' : 'Inactif'}</span></TableCell>
                 <TableCell><div className="flex gap-2">
-                  <Button size="sm" variant="outline" onClick={() => openEditDialog(a)}><Pencil className="h-4 w-4" /></Button>
-                  <Button size="sm" variant="destructive" onClick={() => handleDelete(a.id)}><Trash2 className="h-4 w-4" /></Button>
+                  <PermissionGate permission="articles.edit">
+                    <Button size="sm" variant="outline" onClick={() => openEditDialog(a)}><Pencil className="h-4 w-4" /></Button>
+                  </PermissionGate>
+                  <PermissionGate permission="articles.edit">
+                    <Button size="sm" variant="destructive" onClick={() => handleDelete(a.id)}><Trash2 className="h-4 w-4" /></Button>
+                  </PermissionGate>
                 </div></TableCell>
               </TableRow>))}</TableBody>
             </Table>

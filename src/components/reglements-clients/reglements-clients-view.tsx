@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Plus, Pencil, Trash2, Search, Download, AlertTriangle, CheckCircle, ArrowUp, ArrowDown, ArrowUpDown, ChevronDown, ChevronRight } from 'lucide-react';
 import { ExportDialog } from '@/components/import-export/export-dialog';
+import { PermissionGate } from '@/components/auth/permission-gate';
 
 interface ReglementClient {
   id: string; numero: string; factureId: string; dateReglement: string;
@@ -461,11 +462,15 @@ export function ReglementsClientsView() {
   return (
     <div className="p-6 space-y-6 w-full">
       <div className="flex items-center justify-between">
-        <div><h1 className="text-3xl font-bold text-pink-700">Règlements Clients</h1><p className="text-muted-foreground">Gérez les règlements reçus - V2.50</p></div>
+        <div><h1 className="text-3xl font-bold text-pink-700">Règlements Clients</h1><p className="text-muted-foreground">Gérez les règlements reçus - V2.51</p></div>
         <div className="flex items-center gap-2">
           <span className="bg-pink-100 text-pink-700 px-3 py-1 rounded-full text-sm font-mono font-bold">MFC01</span>
-          <Button variant="outline" onClick={() => setExportOpen(true)}><Download className="w-4 h-4 mr-2" />Export</Button>
-          <Button className="bg-pink-600 hover:bg-pink-700" onClick={() => { resetForm(); setDialogOpen(true); }}><Plus className="w-4 h-4 mr-2" />Nouveau</Button>
+          <PermissionGate permission="reglements.create">
+            <Button variant="outline" onClick={() => setExportOpen(true)}><Download className="w-4 h-4 mr-2" />Export</Button>
+          </PermissionGate>
+          <PermissionGate permission="reglements.create">
+            <Button className="bg-pink-600 hover:bg-pink-700" onClick={() => { resetForm(); setDialogOpen(true); }}><Plus className="w-4 h-4 mr-2" />Nouveau</Button>
+          </PermissionGate>
         </div>
       </div>
       <Card>
@@ -532,14 +537,18 @@ export function ReglementsClientsView() {
                           <TableCell>
                             <div className="flex gap-2">
                               {hasPending && (
-                                <Button size="sm" variant="outline" className="text-pink-600" onClick={() => handleValidateGroup(item.baseNumber, item.reglements)} title="Valider tout">
-                                  <CheckCircle className="h-4 w-4" />
-                                </Button>
+                                <PermissionGate permission="reglements.validate">
+                                  <Button size="sm" variant="outline" className="text-pink-600" onClick={() => handleValidateGroup(item.baseNumber, item.reglements)} title="Valider tout">
+                                    <CheckCircle className="h-4 w-4" />
+                                  </Button>
+                                </PermissionGate>
                               )}
                               {!item.reglements.some(r => r.statut === 'VALIDE') && (
-                                <Button size="sm" variant="destructive" onClick={() => handleDeleteGroup(item.baseNumber, item.reglements)} title="Supprimer tout">
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
+                                <PermissionGate permission="reglements.edit">
+                                  <Button size="sm" variant="destructive" onClick={() => handleDeleteGroup(item.baseNumber, item.reglements)} title="Supprimer tout">
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                </PermissionGate>
                               )}
                             </div>
                           </TableCell>
@@ -561,16 +570,22 @@ export function ReglementsClientsView() {
                             <TableCell>
                               <div className="flex gap-2">
                                 {r.statut === 'ENREGISTRE' && (
-                                  <Button size="sm" variant="outline" className="text-pink-600" onClick={() => handleValidate(r.id)} title="Valider">
-                                    <CheckCircle className="h-4 w-4" />
-                                  </Button>
+                                  <PermissionGate permission="reglements.validate">
+                                    <Button size="sm" variant="outline" className="text-pink-600" onClick={() => handleValidate(r.id)} title="Valider">
+                                      <CheckCircle className="h-4 w-4" />
+                                    </Button>
+                                  </PermissionGate>
                                 )}
-                                <Button size="sm" variant="outline" onClick={() => openEditDialog(r)} disabled={r.statut === 'VALIDE'} title="Modifier">
-                                  <Pencil className="h-4 w-4" />
-                                </Button>
-                                <Button size="sm" variant="destructive" onClick={() => handleDelete(r.id)} disabled={r.statut === 'VALIDE'} title="Supprimer">
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
+                                <PermissionGate permission="reglements.edit">
+                                  <Button size="sm" variant="outline" onClick={() => openEditDialog(r)} disabled={r.statut === 'VALIDE'} title="Modifier">
+                                    <Pencil className="h-4 w-4" />
+                                  </Button>
+                                </PermissionGate>
+                                <PermissionGate permission="reglements.edit">
+                                  <Button size="sm" variant="destructive" onClick={() => handleDelete(r.id)} disabled={r.statut === 'VALIDE'} title="Supprimer">
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                </PermissionGate>
                               </div>
                             </TableCell>
                           </TableRow>
@@ -597,16 +612,22 @@ export function ReglementsClientsView() {
                         <TableCell>
                           <div className="flex gap-2">
                             {r.statut === 'ENREGISTRE' && (
-                              <Button size="sm" variant="outline" className="text-pink-600" onClick={() => handleValidate(r.id)} title="Valider">
-                                <CheckCircle className="h-4 w-4" />
-                              </Button>
+                              <PermissionGate permission="reglements.validate">
+                                <Button size="sm" variant="outline" className="text-pink-600" onClick={() => handleValidate(r.id)} title="Valider">
+                                  <CheckCircle className="h-4 w-4" />
+                                </Button>
+                              </PermissionGate>
                             )}
-                            <Button size="sm" variant="outline" onClick={() => openEditDialog(r)} disabled={r.statut === 'VALIDE'} title="Modifier">
-                              <Pencil className="h-4 w-4" />
-                            </Button>
-                            <Button size="sm" variant="destructive" onClick={() => handleDelete(r.id)} disabled={r.statut === 'VALIDE'} title="Supprimer">
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
+                            <PermissionGate permission="reglements.edit">
+                              <Button size="sm" variant="outline" onClick={() => openEditDialog(r)} disabled={r.statut === 'VALIDE'} title="Modifier">
+                                <Pencil className="h-4 w-4" />
+                              </Button>
+                            </PermissionGate>
+                            <PermissionGate permission="reglements.edit">
+                              <Button size="sm" variant="destructive" onClick={() => handleDelete(r.id)} disabled={r.statut === 'VALIDE'} title="Supprimer">
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </PermissionGate>
                           </div>
                         </TableCell>
                       </TableRow>

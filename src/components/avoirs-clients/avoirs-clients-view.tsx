@@ -12,6 +12,7 @@ import { Plus, Pencil, Trash2, Search, CheckCircle, Download, Printer, ArrowUp, 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ExportDialog } from '@/components/import-export/export-dialog';
 import { PrintDocument } from '@/components/print/print-document';
+import { PermissionGate } from '@/components/auth/permission-gate';
 
 interface LigneAvoir { id?: string; articleId?: string; designation: string; quantite: string; prixUnitaire: string; tauxTVA: string; totalHT: number; }
 interface AvoirClient { id: string; numero: string; dateAvoir: string; clientId: string; factureId: string | null; motif: string | null; statut: string; notes: string | null; infoLibre: string | null; totalHT: number; totalTVA: number; totalTTC: number; client: { raisonSociale: string; adresse?: string; ville?: string; ice?: string }; facture?: { numero: string } | null; lignes?: LigneAvoir[]; }
@@ -266,8 +267,8 @@ export function AvoirsClientsView() {
         <div><h1 className="text-3xl font-bold text-pink-700">Avoirs Clients</h1><p className="text-muted-foreground">Gérez vos avoirs</p></div>
         <div className="flex items-center gap-2">
           <span className="bg-pink-100 text-pink-700 px-3 py-1 rounded-full text-sm font-mono font-bold">NAC01</span>
-          <Button variant="outline" onClick={() => setExportOpen(true)}><Download className="w-4 h-4 mr-2" />Export</Button>
-          <Button className="bg-pink-600 hover:bg-pink-700" onClick={() => { resetForm(); setDialogOpen(true); }}><Plus className="w-4 h-4 mr-2" />Nouveau</Button>
+          <PermissionGate permission="avoirs.create"><Button variant="outline" onClick={() => setExportOpen(true)}><Download className="w-4 h-4 mr-2" />Export</Button></PermissionGate>
+          <PermissionGate permission="avoirs.create"><Button className="bg-pink-600 hover:bg-pink-700" onClick={() => { resetForm(); setDialogOpen(true); }}><Plus className="w-4 h-4 mr-2" />Nouveau</Button></PermissionGate>
         </div>
       </div>
       <Card>
@@ -311,10 +312,10 @@ export function AvoirsClientsView() {
                 <TableCell>{formatCurrency(a.totalTTC)}</TableCell>
                 <TableCell><span className={`px-2 py-1 rounded text-xs ${a.statut === 'VALIDEE' ? 'bg-pink-100 text-pink-800' : 'bg-yellow-100 text-yellow-800'}`}>{a.statut === 'VALIDEE' ? 'Validé' : 'Brouillon'}</span></TableCell>
                 <TableCell><div className="flex gap-1 flex-wrap">
-                  {a.statut === 'BROUILLON' && <Button size="sm" variant="outline" className="text-pink-600" onClick={() => handleValidate(a.id)} title="Valider"><CheckCircle className="h-4 w-4" /></Button>}
+                  {a.statut === 'BROUILLON' && <PermissionGate permission="avoirs.validate"><Button size="sm" variant="outline" className="text-pink-600" onClick={() => handleValidate(a.id)} title="Valider"><CheckCircle className="h-4 w-4" /></Button></PermissionGate>}
                   <Button size="sm" variant="outline" onClick={() => handlePrint(a)} title="Imprimer"><Printer className="h-4 w-4" /></Button>
-                  <Button size="sm" variant="outline" onClick={() => openEditDialog(a)} title="Modifier"><Pencil className="h-4 w-4" /></Button>
-                  <Button size="sm" variant="destructive" onClick={() => handleDelete(a.id)} disabled={a.statut === 'VALIDEE'} title="Supprimer"><Trash2 className="h-4 w-4" /></Button>
+                  <PermissionGate permission="avoirs.edit"><Button size="sm" variant="outline" onClick={() => openEditDialog(a)} title="Modifier"><Pencil className="h-4 w-4" /></Button></PermissionGate>
+                  <PermissionGate permission="avoirs.edit"><Button size="sm" variant="destructive" onClick={() => handleDelete(a.id)} disabled={a.statut === 'VALIDEE'} title="Supprimer"><Trash2 className="h-4 w-4" /></Button></PermissionGate>
                 </div></TableCell>
               </TableRow>))}</TableBody>
             </Table>
