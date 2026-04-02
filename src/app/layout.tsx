@@ -18,7 +18,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "SRGA V2.51 - Gestion de Facturation",
+  title: "SRGA V2.52 - Gestion de Facturation",
   description: "Application de gestion de facturation",
 };
 
