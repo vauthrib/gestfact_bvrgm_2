@@ -65,7 +65,7 @@ export default function InitForm() {
         <div className="text-center mb-6">
           <div className="flex items-center justify-center gap-2 mb-2">
             <h1 className="text-3xl font-bold text-pink-600">SRGA</h1>
-            <span className="bg-pink-100 text-pink-600 px-3 py-1 rounded-full text-sm font-mono font-bold border border-pink-300">V2.53</span>
+            <span className="bg-pink-100 text-pink-600 px-3 py-1 rounded-full text-sm font-mono font-bold border border-pink-300">V2.54</span>
           </div>
           <p className="text-lg font-medium text-foreground">Première initialisation</p>
           <p className="text-sm text-muted-foreground">Créez le compte administrateur</p>
