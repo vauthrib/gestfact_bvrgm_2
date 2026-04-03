@@ -102,7 +102,7 @@ const numberToWords = (num: number): string => {
   return result.trim();
 };
 
-// V2.59 - Couleurs par instance
+// V2.60 - Couleurs par instance
 const PRIMARY_COLOR = '#ec4899'; // pink-500
 
 const DEFAULT_LAYOUT: PrintLayout = {
