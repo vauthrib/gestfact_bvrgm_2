@@ -66,6 +66,9 @@ export function BonsLivraisonView() {
   // Multi-BL selection for grouped invoice
   const [selectedBLs, setSelectedBLs] = useState<string[]>([]);
   const [convertMultipleDialogOpen, setConvertMultipleDialogOpen] = useState(false);
+  const [analysisResult, setAnalysisResult] = useState<any>(null);
+  const [conflictDialogOpen, setConflictDialogOpen] = useState(false);
+  const [conflictResolutions, setConflictResolutions] = useState<Record<string, any>>({});
 
   useEffect(() => { fetchBons(); fetchClients(); fetchArticles(); fetchParametres(); }, []);
   
@@ -237,7 +240,7 @@ export function BonsLivraisonView() {
     }
   };
 
-  // Handle multiple BL to single invoice conversion
+  // Handle multiple BL to single invoice conversion - analyze first
   const handleConvertMultipleToFacture = async () => {
     if (selectedBLs.length === 0) return;
     
@@ -250,7 +253,33 @@ export function BonsLivraisonView() {
       return;
     }
     
-    setConvertMultipleDialogOpen(true);
+    // Analyze BLs for duplicates and conflicts
+    try {
+      const res = await fetch(`/api/bons-livraison/convert-multiple?blIds=${selectedBLs.join(',')}`);
+      const analysis = await res.json();
+      
+      if (analysis.error) {
+        alert(analysis.error);
+        return;
+      }
+      
+      setAnalysisResult(analysis);
+      
+      if (analysis.hasConflicts) {
+        // Initialize resolutions with default (use reference price)
+        const initialResolutions: Record<string, any> = {};
+        analysis.conflicts.forEach((c: any) => {
+          const key = c.articleId || `designation:${c.designation}`;
+          initialResolutions[key] = { action: 'useReference', prixUnitaire: c.prixReference };
+        });
+        setConflictResolutions(initialResolutions);
+        setConflictDialogOpen(true);
+      } else {
+        setConvertMultipleDialogOpen(true);
+      }
+    } catch (e) {
+      alert('Erreur lors de l\'analyse des BL');
+    }
   };
 
   // Confirm and execute multiple BL conversion
@@ -259,7 +288,10 @@ export function BonsLivraisonView() {
       const res = await fetch('/api/bons-livraison/convert-multiple', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ blIds: selectedBLs })
+        body: JSON.stringify({ 
+          blIds: selectedBLs,
+          conflictResolutions
+        })
       });
       
       if (res.ok) {
@@ -267,6 +299,9 @@ export function BonsLivraisonView() {
         alert(`Facture ${facture.numero} créée avec succès depuis ${selectedBLs.length} BL !`);
         setSelectedBLs([]);
         setConvertMultipleDialogOpen(false);
+        setConflictDialogOpen(false);
+        setAnalysisResult(null);
+        setConflictResolutions({});
         fetchBons();
       } else {
         const err = await res.json();
@@ -275,6 +310,14 @@ export function BonsLivraisonView() {
     } catch (e) {
       alert('Erreur serveur');
     }
+  };
+
+  // Update conflict resolution
+  const updateConflictResolution = (key: string, action: string, prixUnitaire?: number) => {
+    setConflictResolutions(prev => ({
+      ...prev,
+      [key]: { action, prixUnitaire: prixUnitaire || prev[key]?.prixUnitaire }
+    }));
   };
 
   const resetForm = () => {
@@ -601,6 +644,119 @@ export function BonsLivraisonView() {
           <DialogFooter>
             <Button variant="outline" onClick={() => setCodeDialogOpen(false)}>Annuler</Button>
             <Button className="bg-pink-600 hover:bg-pink-700" onClick={handleCodeSubmit}>Confirmer</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      {/* Conflict resolution dialog */}
+      <Dialog open={conflictDialogOpen} onOpenChange={setConflictDialogOpen}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Conflits de prix détectés</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <p className="text-sm text-muted-foreground">
+              Certains articles apparaissent avec des prix différents dans les BL sélectionnés. 
+              Veuillez choisir comment traiter chaque conflit.
+            </p>
+            <div className="space-y-4">
+              {analysisResult?.conflicts?.map((conflict: any, idx: number) => {
+                const key = conflict.articleId || `designation:${conflict.designation}`;
+                const resolution = conflictResolutions[key] || { action: 'useReference' };
+                
+                return (
+                  <div key={idx} className="border rounded-lg p-4 bg-yellow-50 border-yellow-200">
+                    <div className="font-medium text-yellow-800 mb-2">
+                      {conflict.designation}
+                    </div>
+                    <div className="text-sm text-yellow-700 mb-2">
+                      <span className="font-medium">Prix différents détectés : </span>
+                      {conflict.prixUnitaires.map((p: number, i: number) => (
+                        <span key={i} className="mx-1 px-2 py-0.5 bg-yellow-200 rounded">
+                          {formatCurrency(p)}
+                        </span>
+                      ))}
+                    </div>
+                    {conflict.prixReference && (
+                      <div className="text-sm text-green-700 mb-2">
+                        Prix de référence (article) : <strong>{formatCurrency(conflict.prixReference)}</strong>
+                      </div>
+                    )}
+                    <div className="text-sm text-muted-foreground mb-3">
+                      Quantité totale : <strong>{conflict.totalQuantite}</strong>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium">Choisir une action :</Label>
+                      <div className="space-y-2">
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="radio"
+                            name={`conflict-${idx}`}
+                            checked={resolution.action === 'useReference'}
+                            onChange={() => updateConflictResolution(key, 'useReference', conflict.prixReference)}
+                            disabled={!conflict.prixReference}
+                          />
+                          <span className="text-sm">
+                            Utiliser le prix de référence ({conflict.prixReference ? formatCurrency(conflict.prixReference) : 'non disponible'})
+                          </span>
+                        </label>
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="radio"
+                            name={`conflict-${idx}`}
+                            checked={resolution.action === 'keepSeparate'}
+                            onChange={() => updateConflictResolution(key, 'keepSeparate')}
+                          />
+                          <span className="text-sm">
+                            Garder les lignes séparées (ne pas fusionner)
+                          </span>
+                        </label>
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="radio"
+                            name={`conflict-${idx}`}
+                            checked={resolution.action === 'useCustom'}
+                            onChange={() => updateConflictResolution(key, 'useCustom', resolution.prixUnitaire || conflict.prixUnitaires[0])}
+                          />
+                          <span className="text-sm">Utiliser un prix personnalisé :</span>
+                        </label>
+                        {resolution.action === 'useCustom' && (
+                          <Input
+                            type="number"
+                            step="0.01"
+                            value={resolution.prixUnitaire || ''}
+                            onChange={(e) => updateConflictResolution(key, 'useCustom', parseFloat(e.target.value) || 0)}
+                            className="w-32 ml-6"
+                            placeholder="Prix unitaire"
+                          />
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            {analysisResult?.normalLines && analysisResult.normalLines.length > 0 && (
+              <div className="border rounded-lg p-3 bg-green-50">
+                <div className="text-sm font-medium text-green-800 mb-2">
+                  Articles sans conflit (seront fusionnés automatiquement) :
+                </div>
+                <div className="text-sm text-green-700">
+                  {analysisResult.normalLines.map((line: any, idx: number) => (
+                    <div key={idx} className="flex justify-between">
+                      <span>{line.designation}</span>
+                      <span>Qté: {line.quantite} × {formatCurrency(line.prixUnitaire)}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setConflictDialogOpen(false)}>Annuler</Button>
+            <Button className="bg-pink-600 hover:bg-pink-700" onClick={() => { setConflictDialogOpen(false); setConvertMultipleDialogOpen(true); }}>
+              Continuer
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
