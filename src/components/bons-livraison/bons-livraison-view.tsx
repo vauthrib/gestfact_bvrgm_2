@@ -63,6 +63,10 @@ export function BonsLivraisonView() {
   const [multiArticleDialogOpen, setMultiArticleDialogOpen] = useState(false);
   const [selectedArticles, setSelectedArticles] = useState<string[]>([]);
 
+  // Multi-BL selection for grouped invoice
+  const [selectedBLs, setSelectedBLs] = useState<string[]>([]);
+  const [convertMultipleDialogOpen, setConvertMultipleDialogOpen] = useState(false);
+
   useEffect(() => { fetchBons(); fetchClients(); fetchArticles(); fetchParametres(); }, []);
   
   useEffect(() => {
@@ -209,6 +213,70 @@ export function BonsLivraisonView() {
     }
   };
 
+  // Check if a BL can be selected for grouped invoice
+  const isBLSelectable = (bl: BonLivraison) => {
+    return bl.statut === 'VALIDEE' && !bl.facture;
+  };
+
+  // Toggle BL selection
+  const toggleBLSelection = (id: string) => {
+    setSelectedBLs(prev => 
+      prev.includes(id) 
+        ? prev.filter(blId => blId !== id)
+        : [...prev, id]
+    );
+  };
+
+  // Handle select all selectable BLs
+  const handleSelectAllBLs = () => {
+    const selectableIds = filtered.filter(isBLSelectable).map(b => b.id);
+    if (selectedBLs.length === selectableIds.length) {
+      setSelectedBLs([]);
+    } else {
+      setSelectedBLs(selectableIds);
+    }
+  };
+
+  // Handle multiple BL to single invoice conversion
+  const handleConvertMultipleToFacture = async () => {
+    if (selectedBLs.length === 0) return;
+    
+    // Check if all selected BLs have the same client
+    const selectedBLData = bons.filter(b => selectedBLs.includes(b.id));
+    const clientIds = [...new Set(selectedBLData.map(b => b.clientId))];
+    
+    if (clientIds.length > 1) {
+      alert('Tous les BL sélectionnés doivent appartenir au même client.');
+      return;
+    }
+    
+    setConvertMultipleDialogOpen(true);
+  };
+
+  // Confirm and execute multiple BL conversion
+  const confirmConvertMultiple = async () => {
+    try {
+      const res = await fetch('/api/bons-livraison/convert-multiple', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ blIds: selectedBLs })
+      });
+      
+      if (res.ok) {
+        const facture = await res.json();
+        alert(`Facture ${facture.numero} créée avec succès depuis ${selectedBLs.length} BL !`);
+        setSelectedBLs([]);
+        setConvertMultipleDialogOpen(false);
+        fetchBons();
+      } else {
+        const err = await res.json();
+        alert(err.error || 'Erreur lors de la conversion');
+      }
+    } catch (e) {
+      alert('Erreur serveur');
+    }
+  };
+
   const resetForm = () => {
     setFormData({ numero: '', dateBL: new Date().toISOString().split('T')[0], clientId: '', bonCommande: '', infoLibre: '', notesLivraison: '' });
     setLignes([{ designation: '', quantite: 1, prixUnitaire: 0, totalHT: 0 }]);
@@ -310,6 +378,13 @@ export function BonsLivraisonView() {
           <PermissionGate permission="bl.create">
             <Button variant="outline" onClick={() => setExportOpen(true)}><Download className="w-4 h-4 mr-2" />Export</Button>
           </PermissionGate>
+          <PermissionGate permission="facture.create">
+            {selectedBLs.length > 0 && (
+              <Button className="bg-pink-600 hover:bg-pink-700" onClick={handleConvertMultipleToFacture}>
+                <FileText className="w-4 h-4 mr-2" />Créer facture groupée ({selectedBLs.length} BL)
+              </Button>
+            )}
+          </PermissionGate>
           <PermissionGate permission="bl.create">
             <Button className="bg-pink-600 hover:bg-pink-700" onClick={() => { resetForm(); setDialogOpen(true); }}><Plus className="w-4 h-4 mr-2" />Nouveau</Button>
           </PermissionGate>
@@ -339,6 +414,12 @@ export function BonsLivraisonView() {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead className="w-12">
+                    <Checkbox 
+                      checked={filtered.filter(isBLSelectable).length > 0 && selectedBLs.length === filtered.filter(isBLSelectable).length}
+                      onCheckedChange={handleSelectAllBLs}
+                    />
+                  </TableHead>
                   <TableHead className="cursor-pointer hover:bg-gray-100" onClick={() => handleSort('numero')}>N° <SortIcon field="numero" /></TableHead>
                   <TableHead className="cursor-pointer hover:bg-gray-100" onClick={() => handleSort('dateBL')}>Date <SortIcon field="dateBL" /></TableHead>
                   <TableHead className="cursor-pointer hover:bg-gray-100" onClick={() => handleSort('client')}>Client <SortIcon field="client" /></TableHead>
@@ -348,7 +429,15 @@ export function BonsLivraisonView() {
                   <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
-              <TableBody>{filtered.map((b) => (<TableRow key={b.id}>
+              <TableBody>{filtered.map((b) => (<TableRow key={b.id} className={selectedBLs.includes(b.id) ? 'bg-pink-50' : ''}>
+                <TableCell>
+                  {isBLSelectable(b) && (
+                    <Checkbox 
+                      checked={selectedBLs.includes(b.id)}
+                      onCheckedChange={() => toggleBLSelection(b.id)}
+                    />
+                  )}
+                </TableCell>
                 <TableCell className="font-medium">{b.numero}</TableCell>
                 <TableCell>{new Date(b.dateBL).toLocaleDateString('fr-FR')}</TableCell>
                 <TableCell>{b.client?.raisonSociale}</TableCell>
@@ -512,6 +601,43 @@ export function BonsLivraisonView() {
           <DialogFooter>
             <Button variant="outline" onClick={() => setCodeDialogOpen(false)}>Annuler</Button>
             <Button className="bg-pink-600 hover:bg-pink-700" onClick={handleCodeSubmit}>Confirmer</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      {/* Confirmation dialog for multiple BL conversion */}
+      <Dialog open={convertMultipleDialogOpen} onOpenChange={setConvertMultipleDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Créer une facture groupée</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <p className="text-sm text-muted-foreground">
+              Vous allez créer une seule facture à partir de <strong>{selectedBLs.length} bon{selectedBLs.length > 1 ? 's' : ''} de livraison</strong>.
+            </p>
+            <div className="border rounded-lg p-3 bg-pink-50">
+              <div className="text-sm font-medium text-pink-800 mb-2">BL sélectionnés :</div>
+              <div className="text-sm text-pink-700 max-h-32 overflow-y-auto">
+                {bons.filter(b => selectedBLs.includes(b.id)).map(b => (
+                  <div key={b.id} className="flex justify-between">
+                    <span>{b.numero}</span>
+                    <span>{formatCurrency(b.totalHT)}</span>
+                  </div>
+                ))}
+              </div>
+              <div className="border-t border-pink-200 mt-2 pt-2 flex justify-between font-bold text-pink-800">
+                <span>Total</span>
+                <span>{formatCurrency(bons.filter(b => selectedBLs.includes(b.id)).reduce((sum, b) => sum + b.totalHT, 0))}</span>
+              </div>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Client : {bons.find(b => selectedBLs.includes(b.id))?.client?.raisonSociale}
+            </p>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setConvertMultipleDialogOpen(false)}>Annuler</Button>
+            <Button className="bg-pink-600 hover:bg-pink-700" onClick={confirmConvertMultiple}>
+              Créer la facture
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
