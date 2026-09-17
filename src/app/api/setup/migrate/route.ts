@@ -62,7 +62,43 @@ async function handleMigration() {
       }
     }
 
-    // 4. Compter les articles
+    // 4. Créer le modèle SRGA basé sur model_etiquette.png s'il n'existe pas encore.
+    // L'image est servie depuis /model_etiquette.png et conserve son ratio 634x720.
+    try {
+      const existingModel = await prisma.labelTemplate.findFirst({ where: { name: 'Modèle étiquette SRGA' } });
+      if (!existingModel) {
+        await prisma.labelTemplate.create({
+          data: {
+            name: 'Modèle étiquette SRGA',
+            width: 88,
+            height: 100,
+            backgroundImage: '/model_etiquette.png',
+            fields: JSON.stringify([
+              {
+                id: 'srga-qrcode',
+                type: 'qrcode',
+                label: 'QR Code article',
+                x: 74,
+                y: 86,
+                width: 11,
+                height: 11,
+                fontSize: 8,
+                bold: false,
+                color: '#000000'
+              }
+            ]),
+            isDefault: true
+          }
+        });
+        results.push('✅ Modèle étiquette SRGA créé depuis model_etiquette.png');
+      } else {
+        results.push('ℹ️ Modèle étiquette SRGA déjà présent');
+      }
+    } catch (e: any) {
+      results.push(`⚠️ Modèle étiquette SRGA: ${e.message}`);
+    }
+
+    // 5. Compter les articles
     const count = await prisma.article.count();
     results.push(`📊 ${count} article(s) dans la base`);
     

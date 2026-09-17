@@ -11,9 +11,29 @@ function parseTemplateFields(template: any) {
 // GET: Lister tous les templates d'étiquettes
 export async function GET() {
   try {
-    const templates = await prisma.labelTemplate.findMany({
+    let templates = await prisma.labelTemplate.findMany({
       orderBy: { createdAt: 'desc' }
     });
+
+    // SRGA : créer automatiquement le modèle fourni si la table est vide.
+    if (templates.length === 0) {
+      const model = await prisma.labelTemplate.create({
+        data: {
+          name: 'Modèle étiquette SRGA',
+          width: 88,
+          height: 100,
+          backgroundImage: '/model_etiquette.png',
+          fields: JSON.stringify([{
+            id: 'srga-qrcode', type: 'qrcode', label: 'QR Code article',
+            x: 74, y: 86, width: 11, height: 11,
+            fontSize: 8, bold: false, color: '#000000'
+          }]),
+          isDefault: true
+        }
+      });
+      templates = [model];
+    }
+
     return NextResponse.json(templates.map(parseTemplateFields));
   } catch (error: any) {
     // Si la table n'existe pas encore, retourner un tableau vide
